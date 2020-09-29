@@ -40,11 +40,11 @@ Globals:
     Runtime: ruby2.7
 
 Resources:
-  HelloWorldFunction:
+  DemoFunctionFunction:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
-      CodeUri: demo-function/hello_world/
-      Handler: app.lambda_handler
+      CodeUri: demo-function/src/
+      Handler: handler.Identity::Idp::Functions::DemoFunction.handle
       MemorySize: 128
       AutoPublishAlias: !Ref environment
       DeploymentPreference:
@@ -99,7 +99,7 @@ Resources:
               - Environment: !Ref environment
       VpcConfig:
         SecurityGroupIds:
-          - !GetAtt HelloWorldSecurityGroup.GroupId
+          - !GetAtt DemoFunctionSecurityGroup.GroupId
         SubnetIds:
           - !Sub
               - '{{resolve:ssm:/${Environment}/network/subnet/private1/id:1}}'
@@ -113,16 +113,16 @@ Resources:
       Tags:
         environment: !Ref environment
 
-  HelloWorldFunctionArn:
+  DemoFunctionFunctionArn:
     Type: AWS::SSM::Parameter
     Properties:
       Type: String
       Name: !Sub
-        - /${Environment}/idp/lambda/HelloWorld/arn
+        - /${Environment}/idp/lambda/DemoFunction/arn
         - Environment: !Ref environment
-      Value: !GetAtt HelloWorldFunction.Arn
+      Value: !GetAtt DemoFunctionFunction.Arn
 
-  HelloWorldSecurityGroup:
+  DemoFunctionSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
       VpcId: !Sub
@@ -153,9 +153,9 @@ Resources:
       BuildMethod: ruby2.7
 
 Outputs:
-  HelloWorldFunction:
+  DemoFunctionFunction:
     Description: "Hello World Lambda Function ARN"
-    Value: !GetAtt HelloWorldFunction.Arn
-  HelloWorldFunctionIamRole:
+    Value: !GetAtt DemoFunctionFunction.Arn
+  DemoFunctionFunctionIamRole:
     Description: "Implicit IAM Role created for Hello World function"
-    Value: !GetAtt HelloWorldFunctionRole.Arn
+    Value: !GetAtt DemoFunctionFunctionRole.Arn
