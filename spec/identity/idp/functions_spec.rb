@@ -1,9 +1,9 @@
-RSpec.describe Identity::Idp::Functions do
+RSpec.describe IdentityIdpFunctions do
   it "has a version number" do
-    expect(Identity::Idp::Functions::VERSION).not_to be nil
+    expect(IdentityIdpFunctions::VERSION).not_to be nil
   end
 
   it "loads the handlers functions" do
-    expect(defined? Identity::Idp::Functions::DemoFunction).to be_truthy
+    expect(defined? IdentityIdpFunctions::DemoFunction).to be_truthy
   end
 end

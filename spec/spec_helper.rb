@@ -1,5 +1,5 @@
 require "bundler/setup"
-require "identity/idp/functions"
+require "identity-idp-functions"
 
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure

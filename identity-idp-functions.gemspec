@@ -1,8 +1,8 @@
-require_relative 'lib/identity/idp/functions/version'
+require_relative 'lib/identity-idp-functions/version'
 
 Gem::Specification.new do |spec|
   spec.name          = "identity-idp-functions"
-  spec.version       = Identity::Idp::Functions::VERSION
+  spec.version       = IdentityIdpFunctions::VERSION
   spec.authors       = ["login.gov team"]
   spec.email         = ["identity-devops@login.gov"]
 

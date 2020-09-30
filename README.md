@@ -6,13 +6,13 @@ IDP Lambda Functions for login.gov
 As a gem:
 
 ```ruby
-gem 'identity-idp-functions', require: 'identity/idp/functions', github: '18f/identity-idp-functions'
+gem 'identity-idp-functions', github: '18f/identity-idp-functions'
 ```
 
 Calling a handler directly
 
 ```ruby
-Identity::Idp::Functions::DemoFunction::Handler.handle(
+IdentityIdpFunctions::DemoFunction::Handler.handle(
   event: event,
   context: context
 )
