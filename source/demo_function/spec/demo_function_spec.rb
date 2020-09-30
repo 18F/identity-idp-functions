@@ -1,4 +1,4 @@
-RSpec.describe Identity::Idp::Functions::DemoFunction::Handler do
+RSpec.describe Identity::Idp::Functions::DemoFunction do
   before do
     ENV["S3_BUCKET_NAME"] = 'test-bucket'
     ENV["AWS_REGION"] = 'test-region'
@@ -21,6 +21,6 @@ RSpec.describe Identity::Idp::Functions::DemoFunction::Handler do
     expect(logger).to receive(:info).with(event)
     expect(logger).to receive(:info).with('my-item')
 
-    Identity::Idp::Functions::DemoFunction::Handler.handle(event: event, context: nil, logger: logger)
+    Identity::Idp::Functions::DemoFunction.handle(event: event, context: nil, logger: logger)
   end
 end
