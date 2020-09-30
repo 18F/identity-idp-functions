@@ -97,11 +97,11 @@ commands:
               --output-template-file identity-infra-functions.$CIRCLE_SHA1.yaml
             aws s3 cp identity-infra-functions.$CIRCLE_SHA1.yaml s3://$DEPLOY_S3_BUCKET/circleci/identity-idp-functions/$CIRCLE_BRANCH/templates/
 
-    run-specs:
-      steps:
-        - run: gem update --system
-        - run: gem install bundler
-        - run: bundle install --path vendor/bundle
-        - run:
-            name: Run rspec
-            command: bundle exec rspec
+  run-specs:
+    steps:
+      - run: gem update --system
+      - run: gem install bundler
+      - run: bundle install --path vendor/bundle
+      - run:
+          name: Run rspec
+          command: bundle exec rspec
