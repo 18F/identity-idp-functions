@@ -20,7 +20,7 @@ Identity::Idp::Functions::DemoFunction::Handler.handle(
 
 ## Adding a new Lambda
 
-- Create a new directory in `source`, make sure it has `src/handler.rb`
+- Lambdas should have an entry point at `source/$function_name/lib/$function_name.rb`
 
 ## Running tests
 

@@ -43,7 +43,7 @@ Resources:
   DemoFunctionFunction:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
-      CodeUri: demo_function/src/
+      CodeUri: demo_function/lib/
       Handler: handler.Identity::Idp::Functions::DemoFunction.handle
       MemorySize: 128
       AutoPublishAlias: !Ref environment
