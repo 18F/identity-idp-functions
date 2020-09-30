@@ -20,6 +20,7 @@ jobs:
       - sam-cli-install
       - checkout
       - build-repo
+      - run-specs
 
 commands:
   sam-cli-install:
@@ -73,7 +74,7 @@ commands:
             sam validate -t template.yaml --profile default --debug
       - run:
           name: "Build Functions"
-          command: | 
+          command: |
             PATH=/home/linuxbrew/.linuxbrew/bin:$PATH
             cd source
             sam build \
@@ -95,3 +96,12 @@ commands:
               --s3-prefix circleci/identity-infra-functions/$CIRCLE_BRANCH/packages \
               --output-template-file identity-infra-functions.$CIRCLE_SHA1.yaml
             aws s3 cp identity-infra-functions.$CIRCLE_SHA1.yaml s3://$DEPLOY_S3_BUCKET/circleci/identity-idp-functions/$CIRCLE_BRANCH/templates/
+
+  run-specs:
+    steps:
+      - run: gem update --system
+      - run: gem install bundler
+      - run: bundle install --path vendor/bundle
+      - run:
+          name: Run rspec
+          command: bundle exec rspec

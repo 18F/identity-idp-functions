@@ -1,15 +1,15 @@
-# hello-world
+# demo_function
 
 This project contains source code and supporting files for a serverless application that you can deploy with the SAM CLI. It includes the following files and folders.
 
-- hello_world - Code for the application's Lambda function.
-- events - Invocation events that you can use to invoke the function.
-- tests - Unit tests for the application code. 
-- template.yaml - A template that defines the application's AWS resources.
+- `lib` - Code for the application's Lambda function.
+- `events` - Invocation events that you can use to invoke the function.
+- `specs` - Unit tests for the application code.
+- `template.yaml` - A template that defines the application's AWS resources.
 
 The application uses several AWS resources, including Lambda functions and an API Gateway API. These resources are defined in the `template.yaml` file in this project. You can update the template to add AWS resources through the same deployment process that updates your application code.
 
-If you prefer to use an integrated development environment (IDE) to build and test your application, you can use the AWS Toolkit.  
+If you prefer to use an integrated development environment (IDE) to build and test your application, you can use the AWS Toolkit.
 The AWS Toolkit is an open source plug-in for popular IDEs that uses the SAM CLI to build and deploy serverless applications on AWS. The AWS Toolkit also adds a simplified step-through debugging experience for Lambda function code. See the following links to get started.
 
 * [PyCharm](https://docs.aws.amazon.com/toolkit-for-jetbrains/latest/userguide/welcome.html)
@@ -49,31 +49,31 @@ You can find your API Gateway Endpoint URL in the output values displayed after 
 Build your application with the `sam build` command.
 
 ```bash
-hello-world$ sam build
+demo_function$ sam build
 ```
 
-The SAM CLI installs dependencies defined in `hello_world/Gemfile`, creates a deployment package, and saves it in the `.aws-sam/build` folder.
+The SAM CLI installs dependencies defined in `lib/Gemfile`, creates a deployment package, and saves it in the `.aws-sam/build` folder.
 
 Test a single function by invoking it directly with a test event. An event is a JSON document that represents the input that the function receives from the event source. Test events are included in the `events` folder in this project.
 
 Run functions locally and invoke them with the `sam local invoke` command.
 
 ```bash
-hello-world$ sam local invoke HelloWorldFunction --event events/event.json
+demo_function$ sam local invoke DemoFunctionFunction --event events/event.json
 ```
 
 The SAM CLI can also emulate your application's API. Use the `sam local start-api` to run the API locally on port 3000.
 
 ```bash
-hello-world$ sam local start-api
-hello-world$ curl http://localhost:3000/
+demo_function$ sam local start-api
+demo_function$ curl http://localhost:3000/
 ```
 
 The SAM CLI reads the application template to determine the API's routes and the functions that they invoke. The `Events` property on each function's definition includes the route and method for each path.
 
 ```yaml
       Events:
-        HelloWorld:
+        DemoFunction:
           Type: Api
           Properties:
             Path: /hello
@@ -90,7 +90,7 @@ To simplify troubleshooting, SAM CLI has a command called `sam logs`. `sam logs`
 `NOTE`: This command works for all AWS Lambda functions; not just the ones you deploy using SAM.
 
 ```bash
-hello-world$ sam logs -n HelloWorldFunction --stack-name hello-world --tail
+demo_function$ sam logs -n DemoFunctionFunction --stack-name demo_function --tail
 ```
 
 You can find more information and examples about filtering Lambda function logs in the [SAM CLI Documentation](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-logging.html).
@@ -100,7 +100,7 @@ You can find more information and examples about filtering Lambda function logs 
 Tests are defined in the `tests` folder in this project.
 
 ```bash
-hello-world$ ruby tests/unit/test_handler.rb
+demo_function$ ruby tests/unit/test_handler.rb
 ```
 
 ## Cleanup
@@ -108,7 +108,7 @@ hello-world$ ruby tests/unit/test_handler.rb
 To delete the sample application that you created, use the AWS CLI. Assuming you used your project name for the stack name, you can run the following:
 
 ```bash
-aws cloudformation delete-stack --stack-name hello-world
+aws cloudformation delete-stack --stack-name demo_function
 ```
 
 ## Resources
