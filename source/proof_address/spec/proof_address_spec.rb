@@ -14,9 +14,9 @@ RSpec.describe IdentityIdpFunctions::ProofAddress do
   end
 
   describe '.handle' do
-    around do |example|
-      stub_env(
-        example,
+    before do
+      stub_const(
+        'ENV',
         'lexisnexis_account_id' => 'abc123',
         'lexisnexis_request_mode' => 'aaa',
         'lexisnexis_username' => 'aaa',
@@ -24,9 +24,7 @@ RSpec.describe IdentityIdpFunctions::ProofAddress do
         'lexisnexis_base_url' => 'https://lexisnexis.example.com/',
         'lexisnexis_phone_finder_workflow' => 'aaa',
       )
-    end
 
-    before do
       stub_request(
         :post,
         'https://lexisnexis.example.com/restws/identity/v2/abc123/aaa/conversation'

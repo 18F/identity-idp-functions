@@ -3,10 +3,6 @@ require "identity-idp-functions"
 require "webmock/rspec"
 require 'retries'
 
-Dir['spec/support/**/*.rb'].each do |support|
-  require File.expand_path(support)
-end
-
 Retries.sleep_enabled = false
 
 RSpec.configure do |config|
