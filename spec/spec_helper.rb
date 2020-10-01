@@ -1,5 +1,10 @@
 require "bundler/setup"
 require "identity-idp-functions"
+require "webmock/rspec"
+
+Dir['spec/support/**/*.rb'].each do |support|
+  require File.expand_path(support)
+end
 
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure

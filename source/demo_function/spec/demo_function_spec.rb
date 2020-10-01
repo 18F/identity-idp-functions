@@ -1,8 +1,13 @@
 RSpec.describe IdentityIdpFunctions::DemoFunction do
-  before do
-    ENV["S3_BUCKET_NAME"] = 'test-bucket'
-    ENV["AWS_REGION"] = 'test-region'
+  around do |example|
+    stub_env(
+      example,
+      'S3_BUCKET_NAME' => 'test-bucket',
+      'AWS_REGION' => 'test-region',
+    )
+  end
 
+  before do
     Aws.config[:s3] = {
       stub_responses: {
         list_objects_v2: {
