@@ -41,7 +41,7 @@ RSpec.describe IdentityIdpFunctions::ProofAddress do
       stub_request(:post, callback_url).
         with(headers: { 'Content-Type' => 'application/json' }) do |request|
           expect(JSON.parse(request.body, symbolize_names: true)).to eq(
-            address_idv_result: {
+            address_result: {
               exception: nil,
               errors: {},
               messages: [],
@@ -69,6 +69,73 @@ RSpec.describe IdentityIdpFunctions::ProofAddress do
         callback_url: callback_url,
         applicant_pii: applicant_pii,
       )
+    end
+
+    let(:lexisnexis_proofer) { instance_double(LexisNexis::PhoneFinder::Proofer) }
+
+    before do
+      allow(function).to receive(:lexisnexis_proofer).and_return(lexisnexis_proofer)
+
+      stub_request(:post, callback_url)
+    end
+
+    context 'with a successful response from the proofer' do
+      before do
+        expect(lexisnexis_proofer).to receive(:proof).
+          and_return(Proofer::Result.new)
+      end
+
+      it 'posts back to the callback url' do
+        function.proof
+
+        expect(WebMock).to have_requested(:post, callback_url)
+      end
+    end
+
+    context 'with an unsuccessful response from the proofer' do
+      before do
+        expect(lexisnexis_proofer).to receive(:proof).
+          and_return(Proofer::Result.new(exception: RuntimeError.new))
+      end
+
+      it 'posts back to the callback url' do
+        function.proof
+
+        expect(WebMock).to have_requested(:post, callback_url)
+      end
+    end
+
+    context 'with a connection error talking to the proofer' do
+      before do
+        allow(lexisnexis_proofer).to receive(:proof).
+          and_raise(Faraday::ConnectionFailed.new('error')).
+          and_raise(Faraday::ConnectionFailed.new('error')).
+          and_raise(Faraday::ConnectionFailed.new('error'))
+      end
+
+      it 'retries 3 times then errors' do
+        expect { function.proof }.to raise_error(Faraday::ConnectionFailed)
+
+        expect(WebMock).to_not have_requested(:post, callback_url)
+      end
+    end
+
+    context 'with a connection error posting to the callback url' do
+      before do
+        expect(lexisnexis_proofer).to receive(:proof).
+          and_return(Proofer::Result.new)
+
+        stub_request(:post, callback_url).
+          to_timeout.
+          to_timeout.
+          to_timeout
+      end
+
+      it 'retries 3 then errors' do
+        expect { function.proof }.to raise_error(Faraday::ConnectionFailed)
+
+        expect(a_request(:post, callback_url)).to have_been_made.times(3)
+      end
     end
   end
 end

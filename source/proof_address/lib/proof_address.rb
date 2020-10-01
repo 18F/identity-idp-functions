@@ -1,6 +1,7 @@
 require 'proofer'
 require 'lexisnexis'
 require 'faraday'
+require 'retries'
 
 module IdentityIdpFunctions
   class ProofAddress
@@ -17,7 +18,9 @@ module IdentityIdpFunctions
     end
 
     def proof
-      proofer_result = LexisNexis::PhoneFinder::Proofer.new.proof(applicant_pii)
+      proofer_result = with_retries(**retry_options) do
+        lexisnexis_proofer.proof(applicant_pii)
+      end
 
       post_callback(callback_body: {
         address_result: proofer_result.to_h,
@@ -25,24 +28,24 @@ module IdentityIdpFunctions
     end
 
     def post_callback(callback_body:)
-      connection = Faraday.new do |faraday|
-        faraday.request :retry, retry_options
+      with_retries(**retry_options) do
+        Faraday.post(
+          callback_url,
+          callback_body.to_json,
+          "Content-Type" => 'application/json',
+          "Accept" => 'application/json'
+        )
       end
+    end
 
-      connection.post(
-        callback_url,
-        callback_body.to_json,
-        "Content-Type" => 'application/json',
-        "Accept" => 'application/json'
-      )
+    def lexisnexis_proofer
+      LexisNexis::PhoneFinder::Proofer.new
     end
 
     def retry_options
       {
-        max: 2,
-        interval: 0.05,
-        interval_randomness: 0.5,
-        backoff_factor: 2
+        max_tries: 3,
+        rescue: [Faraday::TimeoutError, Faraday::ConnectionFailed],
       }
     end
   end
