@@ -66,6 +66,29 @@ RSpec.describe IdentityIdpFunctions::ProofAddress do
     it 'runs' do
       IdentityIdpFunctions::ProofAddress.handle(event: { 'body' => body.to_json }, context: nil)
     end
+
+    context 'when called with a block' do
+      it 'gives the results to the block instead of posting to the callback URL' do
+        yielded_result = nil
+        IdentityIdpFunctions::ProofAddress.handle(
+          event: { 'body' => body.to_json },
+          context: nil
+        ) do |result|
+          yielded_result = result
+        end
+
+        expect(yielded_result).to eq(
+          address_result: {
+            exception: nil,
+            errors: {},
+            messages: [],
+            success: true,
+          }
+        )
+
+        expect(a_request(:post, callback_url)).to_not have_been_made
+      end
+    end
   end
 
   describe '#proof' do

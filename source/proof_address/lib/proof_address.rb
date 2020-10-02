@@ -5,12 +5,12 @@ require 'retries'
 
 module IdentityIdpFunctions
   class ProofAddress
-    def self.handle(event:, context:)
+    def self.handle(event:, context:, &callback_block)
       params = JSON.parse(event['body'], symbolize_names: true)
       new(
         idp_api_auth_token: ENV.fetch("IDP_API_AUTH_TOKEN"),
-        **params
-      ).proof
+        **params,
+      ).proof(&callback_block)
     end
 
     attr_reader :applicant_pii, :callback_url, :idp_api_auth_token
@@ -21,14 +21,20 @@ module IdentityIdpFunctions
       @idp_api_auth_token = idp_api_auth_token
     end
 
-    def proof
+    def proof(&callback_block)
       proofer_result = with_retries(**retry_options) do
         lexisnexis_proofer.proof(applicant_pii)
       end
 
-      post_callback(callback_body: {
+      callback_body = {
         address_result: proofer_result.to_h,
-      })
+      }
+
+      if block_given?
+        yield callback_body
+      else
+        post_callback(callback_body: callback_body)
+      end
     end
 
     def post_callback(callback_body:)

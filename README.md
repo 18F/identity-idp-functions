@@ -20,6 +20,14 @@ IdentityIdpFunctions::DemoFunction.handle(
 )
 ```
 
+Expected local development workflow is with a block:
+
+```ruby
+IdentityIdpFunctions::ProofAddress.handle(event: event, context: context) do |result|
+  store(result[:address_result])
+end
+```
+
 ## Adding a new Lambda
 
 - Lambdas should have an entry point at `source/$function_name/lib/$function_name.rb`
