@@ -1,6 +1,7 @@
 require 'securerandom'
 
 RSpec.describe IdentityIdpFunctions::ProofAddress do
+  let(:idp_api_auth_token) { SecureRandom.hex }
   let(:callback_url) { 'https://example.login.gov/api/callbacks/proof-address/:token' }
   let(:applicant_pii) do
     {
@@ -17,6 +18,7 @@ RSpec.describe IdentityIdpFunctions::ProofAddress do
     before do
       stub_const(
         'ENV',
+        'IDP_API_AUTH_TOKEN' => idp_api_auth_token,
         'lexisnexis_account_id' => 'abc123',
         'lexisnexis_request_mode' => 'aaa',
         'lexisnexis_username' => 'aaa',
@@ -37,7 +39,12 @@ RSpec.describe IdentityIdpFunctions::ProofAddress do
       )
 
       stub_request(:post, callback_url).
-        with(headers: { 'Content-Type' => 'application/json' }) do |request|
+        with(
+          headers: {
+            'Content-Type' => 'application/json',
+            'X-API-AUTH-TOKEN' => idp_api_auth_token,
+          },
+        ) do |request|
           expect(JSON.parse(request.body, symbolize_names: true)).to eq(
             address_result: {
               exception: nil,
@@ -66,6 +73,7 @@ RSpec.describe IdentityIdpFunctions::ProofAddress do
       IdentityIdpFunctions::ProofAddress.new(
         callback_url: callback_url,
         applicant_pii: applicant_pii,
+        idp_api_auth_token: idp_api_auth_token,
       )
     end
 
@@ -74,7 +82,8 @@ RSpec.describe IdentityIdpFunctions::ProofAddress do
     before do
       allow(function).to receive(:lexisnexis_proofer).and_return(lexisnexis_proofer)
 
-      stub_request(:post, callback_url)
+      stub_request(:post, callback_url).
+        with(headers: { 'X-API-AUTH-TOKEN' => idp_api_auth_token })
     end
 
     context 'with a successful response from the proofer' do

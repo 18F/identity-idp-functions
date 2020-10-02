@@ -7,14 +7,18 @@ module IdentityIdpFunctions
   class ProofAddress
     def self.handle(event:, context:)
       params = JSON.parse(event['body'], symbolize_names: true)
-      new(**params).proof
+      new(
+        idp_api_auth_token: ENV.fetch("IDP_API_AUTH_TOKEN"),
+        **params
+      ).proof
     end
 
-    attr_reader :applicant_pii, :callback_url
+    attr_reader :applicant_pii, :callback_url, :idp_api_auth_token
 
-    def initialize(applicant_pii:, callback_url:)
+    def initialize(applicant_pii:, callback_url:, idp_api_auth_token:)
       @applicant_pii = applicant_pii
       @callback_url = callback_url
+      @idp_api_auth_token = idp_api_auth_token
     end
 
     def proof
@@ -32,6 +36,7 @@ module IdentityIdpFunctions
         Faraday.post(
           callback_url,
           callback_body.to_json,
+          "X-API-AUTH-TOKEN" => idp_api_auth_token,
           "Content-Type" => 'application/json',
           "Accept" => 'application/json'
         )
