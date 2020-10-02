@@ -1,5 +1,9 @@
 require "bundler/setup"
 require "identity-idp-functions"
+require "webmock/rspec"
+require 'retries'
+
+Retries.sleep_enabled = false
 
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure
