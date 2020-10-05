@@ -4,6 +4,7 @@ RSpec.describe IdentityIdpFunctions do
   end
 
   it "loads the handlers functions" do
+    require 'identity-idp-functions/demo_function'
     expect(defined? IdentityIdpFunctions::DemoFunction).to be_truthy
   end
 end

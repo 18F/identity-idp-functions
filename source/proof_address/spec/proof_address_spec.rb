@@ -1,4 +1,5 @@
 require 'securerandom'
+require 'identity-idp-functions/proof_address'
 
 RSpec.describe IdentityIdpFunctions::ProofAddress do
   let(:idp_api_auth_token) { SecureRandom.hex }

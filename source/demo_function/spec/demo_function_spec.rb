@@ -1,3 +1,5 @@
+require 'identity-idp-functions/demo_function'
+
 RSpec.describe IdentityIdpFunctions::DemoFunction do
   before do
     stub_const(
