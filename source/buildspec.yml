@@ -1,0 +1,35 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      ruby: 2.7
+    commands:
+      - pip3 install --upgrade aws-sam-cli 
+
+  build:
+    commands:
+      - cd $CODEBUILD_SRC_DIR
+      - GITSHA=$(cat gitsha.txt)
+      - echo $GITSHA
+      - |
+        sam deploy --template-file identity-idp-functions.template.yaml \
+          --stack-name $STACK_NAME \
+          --parameter-overrides gitsha=$GITSHA \
+          environment=$ENVIRONMENT \
+          --capabilities CAPABILITY_IAM
+  post_build:
+    commands:
+      - APPLICATION_FUNCTIONS=$(aws ssm get-parameter --name /$ENVIRONMENT/idp/lambda/application-functions --query 'Parameter.Value' --output text)
+      - echo $GITSHA
+      - echo $APPLICATION_FUNCTIONS
+      - echo $ENVIRONMENT
+      - gitsha_segment=$(echo $GITSHA | cut -c 1-10)
+      - echo $gitsha_segment
+      - |
+        for i in $(echo $APPLICATION_FUNCTIONS | tr ',' '\n')
+        do
+          version=$(aws lambda get-function --function-name $i:$ENVIRONMENT --query 'Configuration.Version' --output text)
+          echo $version
+          aws lambda create-alias --function-name $i --name $gitsha_segment --function-version $version
+        done
