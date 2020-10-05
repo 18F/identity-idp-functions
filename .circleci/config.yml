@@ -95,6 +95,7 @@ commands:
               --s3-bucket $DEPLOY_S3_BUCKET \
               --s3-prefix circleci/identity-idp-functions/$CIRCLE_BRANCH/packages \
               --output-template-file identity-idp-functions.template.yaml
+            echo $CIRCLE_SHA1 > gitsha.txt
             zip identity-idp-functions.zip identity-idp-functions.template.yaml
             zip identity-idp-functions.zip buildspec.yml
             zip identity-idp-functions.zip gitsha.txt
