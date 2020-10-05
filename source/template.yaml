@@ -36,7 +36,22 @@ Description: >
 Globals:
   Function:
     Timeout: 60
+    MemorySize: 128
     Runtime: ruby2.7
+    Environment:
+      Variables:
+        HTTP_PROXY: !Sub
+          - '{{resolve:ssm:/${Environment}/network/outboundproxy/url:1}}'
+          - Environment: !Ref environment
+        HTTPS_PROXY: !Sub
+          - '{{resolve:ssm:/${Environment}/network/outboundproxy/url:1}}'
+          - Environment: !Ref environment
+        NO_PROXY: !Sub
+          - '{{resolve:ssm:/${Environment}/network/outboundproxy/no_proxy:1}}'
+          - Environment: !Ref environment
+        ENVIRONMENT_NAME: !Ref environment
+    Tags:
+      environment: !Ref environment
 
 Resources:
   DemoFunctionFunction:
@@ -44,7 +59,6 @@ Resources:
     Properties:
       CodeUri: demo_function/lib/
       Handler: demo_function.IdentityIdpFunctions::DemoFunction.handle
-      MemorySize: 128
       AutoPublishAlias: !Ref environment
       DeploymentPreference:
         Type: AllAtOnce
@@ -60,7 +74,6 @@ Resources:
           KMS_KEY_ALIAS: !Sub
             - ${Environment}-idp-doc-capture
             - Environment: !Ref environment
-          ENVIRONMENT_NAME: !Ref environment
       Policies:
         - Statement:
           - Sid: S3ObjectAccess
@@ -108,8 +121,6 @@ Resources:
           - !Sub
               - '{{resolve:ssm:/${Environment}/network/subnet/private3/id:1}}'
               - Environment: !Ref environment
-      Tags:
-        environment: !Ref environment
 
   DemoFunctionFunctionArn:
     Type: AWS::SSM::Parameter
@@ -148,7 +159,6 @@ Resources:
     Properties:
       CodeUri: proof_address/lib/
       Handler: proof_address.IdentityIdpFunctions::ProofAddress.handle
-      MemorySize: 128
       AutoPublishAlias: !Ref environment
       DeploymentPreference:
         Type: AllAtOnce
@@ -164,7 +174,6 @@ Resources:
           KMS_KEY_ALIAS: !Sub
             - ${Environment}-idp-doc-capture
             - Environment: !Ref environment
-          ENVIRONMENT_NAME: !Ref environment
       Policies:
         - Statement:
           - Sid: S3ObjectAccess
@@ -212,8 +221,7 @@ Resources:
           - !Sub
               - '{{resolve:ssm:/${Environment}/network/subnet/private3/id:1}}'
               - Environment: !Ref environment
-      Tags:
-        environment: !Ref environment
+      
 
   ProofAddressFunctionArn:
     Type: AWS::SSM::Parameter
