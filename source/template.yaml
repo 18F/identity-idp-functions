@@ -33,7 +33,6 @@ Description: >
 
   IDP functions for login.gov
 
-# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
   Function:
     Timeout: 60
@@ -41,7 +40,7 @@ Globals:
 
 Resources:
   DemoFunctionFunction:
-    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Type: AWS::Serverless::Function
     Properties:
       CodeUri: demo_function/lib/
       Handler: demo_function.IdentityIdpFunctions::DemoFunction.handle
@@ -49,7 +48,6 @@ Resources:
       AutoPublishAlias: !Ref environment
       DeploymentPreference:
         Type: AllAtOnce
-      VersionDescription: !Ref gitsha
       Layers:
         - !Ref AWSRubySDKLayer
       Environment:
@@ -125,6 +123,9 @@ Resources:
   DemoFunctionSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
+      GroupName: !Sub 
+        - ${Environment}-DemoFunction
+        - Environment: !Ref environment
       VpcId: !Sub
         - '{{resolve:ssm:/${Environment}/network/vpc/id:1}}'
         - Environment: !Ref environment
@@ -138,11 +139,12 @@ Resources:
         - IpProtocol: tcp
           FromPort: 443
           ToPort: 443
-          # Should be another security group or VPC CIDR block
-          CidrIp: 0.0.0.0/0
+          SourceSecurityGroupId: !Sub 
+              - '{{resolve:ssm:/${Environment}/network/securitygroup/idp/id:1}}'
+              - Environment: !Ref environment
 
   ProofAddressFunction:
-    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Type: AWS::Serverless::Function 
     Properties:
       CodeUri: proof_address/lib/
       Handler: proof_address.IdentityIdpFunctions::ProofAddress.handle
@@ -150,7 +152,6 @@ Resources:
       AutoPublishAlias: !Ref environment
       DeploymentPreference:
         Type: AllAtOnce
-      VersionDescription: !Ref gitsha
       Layers:
         - !Ref AWSRubySDKLayer
       Environment:
@@ -239,12 +240,38 @@ Resources:
         - IpProtocol: tcp
           FromPort: 443
           ToPort: 443
-          # Should be another security group or VPC CIDR block
-          CidrIp: 0.0.0.0/0
+          SourceSecurityGroupId: !Sub 
+              - '{{resolve:ssm:/${Environment}/network/securitygroup/idp/id:1}}'
+              - Environment: !Ref environment
+
+  # add all functions that need gitsha alias to this list
+  ApplicationLambdaArns:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Type: StringList
+      Name: !Sub 
+        - /${Environment}/idp/lambda/application-functions
+        - Environment: !Ref environment
+      Value: !Join 
+        - ','
+        - - !GetAtt DemoFunctionFunction.Arn
+          - !GetAtt ProofAddressFunction.Arn
+
+  ApplicationLambdaGitSha:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Type: String
+      Name: !Sub 
+        - /${Environment}/idp/lambda/gitsha
+        - Environment: !Ref environment
+      Value: !Ref gitsha
 
   AWSRubySDKLayer:
     Type: "AWS::Serverless::LayerVersion"
     Properties:
+      LayerName: !Sub 
+        - ${Environment}-infra-ruby-sdk
+        - Environment: !Ref environment
       Description: AWS Ruby SDK
       ContentUri: aws-ruby-sdk
       CompatibleRuntimes:
@@ -259,11 +286,11 @@ Outputs:
     Value: !GetAtt DemoFunctionFunction.Arn
   DemoFunctionFunctionIamRole:
     Description: "Implicit IAM Role created for Demo function"
-    Value: !GetAtt DemoFunctionFunctionIamRole.Arn
+    Value: !GetAtt DemoFunctionFunctionRole.Arn
 
   ProofAddressFunction:
     Description: "Proof Address Lambda Function ARN"
     Value: !GetAtt ProofAddressFunction.Arn
   ProofAddressFunctionIamRole:
     Description: "Proof Address Role created for Proof Address function"
-    Value: !GetAtt ProofAddressFunctionIamRole.Arn
+    Value: !GetAtt ProofAddressFunctionRole.Arn
