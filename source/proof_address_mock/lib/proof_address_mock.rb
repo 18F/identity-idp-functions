@@ -1,7 +1,7 @@
 require 'proofer'
 require 'faraday'
 require 'retries'
-require 'identity-idp-functions/mock_proofers/address_mock'
+require_relative 'address_mock_client'
 
 module IdentityIdpFunctions
   class ProofAddressMock
@@ -28,7 +28,7 @@ module IdentityIdpFunctions
 
       result = proofer_result.to_h
       result[:context] = { stages: [
-        address: IdentityIdpFunctions::MockProofers::AddressMock.vendor_name
+        address: IdentityIdpFunctions::AddressMockClient.vendor_name
       ] }
       result[:timed_out] = proofer_result.timed_out?
 
@@ -56,7 +56,7 @@ module IdentityIdpFunctions
     end
 
     def mock_proofer
-      IdentityIdpFunctions::MockProofers::AddressMock.new
+      IdentityIdpFunctions::AddressMockClient.new
     end
 
     def retry_options
