@@ -33,23 +33,35 @@ Description: >
 
   IDP functions for login.gov
 
-# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
   Function:
     Timeout: 60
+    MemorySize: 128
     Runtime: ruby2.7
+    Environment:
+      Variables:
+        HTTP_PROXY: !Sub
+          - '{{resolve:ssm:/${Environment}/network/outboundproxy/url:1}}'
+          - Environment: !Ref environment
+        HTTPS_PROXY: !Sub
+          - '{{resolve:ssm:/${Environment}/network/outboundproxy/url:1}}'
+          - Environment: !Ref environment
+        NO_PROXY: !Sub
+          - '{{resolve:ssm:/${Environment}/network/outboundproxy/no_proxy:1}}'
+          - Environment: !Ref environment
+        ENVIRONMENT_NAME: !Ref environment
+    Tags:
+      environment: !Ref environment
 
 Resources:
   DemoFunctionFunction:
-    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Type: AWS::Serverless::Function
     Properties:
       CodeUri: demo_function/lib/
       Handler: demo_function.IdentityIdpFunctions::DemoFunction.handle
-      MemorySize: 128
       AutoPublishAlias: !Ref environment
       DeploymentPreference:
         Type: AllAtOnce
-      VersionDescription: !Ref gitsha
       Layers:
         - !Ref AWSRubySDKLayer
       Environment:
@@ -62,7 +74,6 @@ Resources:
           KMS_KEY_ALIAS: !Sub
             - ${Environment}-idp-doc-capture
             - Environment: !Ref environment
-          ENVIRONMENT_NAME: !Ref environment
       Policies:
         - Statement:
           - Sid: S3ObjectAccess
@@ -110,8 +121,6 @@ Resources:
           - !Sub
               - '{{resolve:ssm:/${Environment}/network/subnet/private3/id:1}}'
               - Environment: !Ref environment
-      Tags:
-        environment: !Ref environment
 
   DemoFunctionFunctionArn:
     Type: AWS::SSM::Parameter
@@ -125,6 +134,9 @@ Resources:
   DemoFunctionSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
+      GroupName: !Sub 
+        - ${Environment}-DemoFunction
+        - Environment: !Ref environment
       VpcId: !Sub
         - '{{resolve:ssm:/${Environment}/network/vpc/id:1}}'
         - Environment: !Ref environment
@@ -138,19 +150,18 @@ Resources:
         - IpProtocol: tcp
           FromPort: 443
           ToPort: 443
-          # Should be another security group or VPC CIDR block
-          CidrIp: 0.0.0.0/0
+          SourceSecurityGroupId: !Sub 
+              - '{{resolve:ssm:/${Environment}/network/securitygroup/idp/id:1}}'
+              - Environment: !Ref environment
 
   ProofAddressFunction:
-    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Type: AWS::Serverless::Function 
     Properties:
       CodeUri: proof_address/lib/
       Handler: proof_address.IdentityIdpFunctions::ProofAddress.handle
-      MemorySize: 128
       AutoPublishAlias: !Ref environment
       DeploymentPreference:
         Type: AllAtOnce
-      VersionDescription: !Ref gitsha
       Layers:
         - !Ref AWSRubySDKLayer
       Environment:
@@ -163,7 +174,6 @@ Resources:
           KMS_KEY_ALIAS: !Sub
             - ${Environment}-idp-doc-capture
             - Environment: !Ref environment
-          ENVIRONMENT_NAME: !Ref environment
       Policies:
         - Statement:
           - Sid: S3ObjectAccess
@@ -211,8 +221,7 @@ Resources:
           - !Sub
               - '{{resolve:ssm:/${Environment}/network/subnet/private3/id:1}}'
               - Environment: !Ref environment
-      Tags:
-        environment: !Ref environment
+      
 
   ProofAddressFunctionArn:
     Type: AWS::SSM::Parameter
@@ -239,8 +248,31 @@ Resources:
         - IpProtocol: tcp
           FromPort: 443
           ToPort: 443
-          # Should be another security group or VPC CIDR block
-          CidrIp: 0.0.0.0/0
+          SourceSecurityGroupId: !Sub 
+              - '{{resolve:ssm:/${Environment}/network/securitygroup/idp/id:1}}'
+              - Environment: !Ref environment
+
+  # add all functions that need gitsha alias to this list
+  ApplicationLambdaArns:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Type: StringList
+      Name: !Sub 
+        - /${Environment}/idp/lambda/application-functions
+        - Environment: !Ref environment
+      Value: !Join 
+        - ','
+        - - !GetAtt DemoFunctionFunction.Arn
+          - !GetAtt ProofAddressFunction.Arn
+
+  ApplicationLambdaGitSha:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Type: String
+      Name: !Sub 
+        - /${Environment}/idp/lambda/gitsha
+        - Environment: !Ref environment
+      Value: !Ref gitsha
 
   ProofAddressMockFunction:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
@@ -346,6 +378,9 @@ Resources:
   AWSRubySDKLayer:
     Type: "AWS::Serverless::LayerVersion"
     Properties:
+      LayerName: !Sub 
+        - ${Environment}-infra-ruby-sdk
+        - Environment: !Ref environment
       Description: AWS Ruby SDK
       ContentUri: aws-ruby-sdk
       CompatibleRuntimes:
@@ -360,18 +395,18 @@ Outputs:
     Value: !GetAtt DemoFunctionFunction.Arn
   DemoFunctionFunctionIamRole:
     Description: "Implicit IAM Role created for Demo function"
-    Value: !GetAtt DemoFunctionFunctionIamRole.Arn
+    Value: !GetAtt DemoFunctionFunctionRole.Arn
 
   ProofAddressFunction:
     Description: "Proof Address Lambda Function ARN"
     Value: !GetAtt ProofAddressFunction.Arn
   ProofAddressFunctionIamRole:
     Description: "Proof Address Role created for Proof Address function"
-    Value: !GetAtt ProofAddressFunctionIamRole.Arn
+    Value: !GetAtt ProofAddressFunctionRole.Arn
 
   ProofAddressMockFunction:
     Description: "Proof Address Mock Lambda Function ARN"
     Value: !GetAtt ProofAddressMockFunction.Arn
   ProofAddressMockFunctionIamRole:
     Description: "Proof Address Mock Role created for Proof Address Mock function"
-    Value: !GetAtt ProofAddressMockFunctionIamRole.Arn
+    Value: !GetAtt ProofAddressMockFunctionRole.Arn
