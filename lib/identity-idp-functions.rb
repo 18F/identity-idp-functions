@@ -1,4 +1,5 @@
 require 'identity-idp-functions/version'
+require 'identity-idp-functions/mock_proofers'
 
 # This is the entry point for this repository as a gem, ex
 # require 'identity-idp-functions'

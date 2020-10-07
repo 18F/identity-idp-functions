@@ -1,14 +1,14 @@
 require 'proofer'
-require 'lexisnexis'
 require 'faraday'
 require 'retries'
+require 'identity-idp-functions/mock_proofers/address_mock'
 
 module IdentityIdpFunctions
-  class ProofAddress
+  class ProofAddressMock
     def self.handle(event:, context:, &callback_block)
       params = JSON.parse(event['body'], symbolize_names: true)
       new(
-        idp_api_auth_token: ENV.fetch("IDP_API_AUTH_TOKEN"),
+        idp_api_auth_token: ENV['IDP_API_AUTH_TOKEN'],
         **params,
       ).proof(&callback_block)
     end
@@ -23,11 +23,11 @@ module IdentityIdpFunctions
 
     def proof(&callback_block)
       proofer_result = with_retries(**retry_options) do
-        lexisnexis_proofer.proof(applicant_pii)
+        mock_proofer.proof(applicant_pii)
       end
 
       result = proofer_result.to_h
-      result[:context] = { stages: [address: LexisNexis::PhoneFinder::Proofer.vendor_name] }
+      result[:context] = { stages: [address: IdentityIdpFunctions::MockProofers::AddressMock.inspect] }
       result[:timed_out] = proofer_result.timed_out?
 
       callback_body = {
@@ -53,8 +53,8 @@ module IdentityIdpFunctions
       end
     end
 
-    def lexisnexis_proofer
-      LexisNexis::PhoneFinder::Proofer.new
+    def mock_proofer
+      IdentityIdpFunctions::MockProofers::AddressMock.new
     end
 
     def retry_options
