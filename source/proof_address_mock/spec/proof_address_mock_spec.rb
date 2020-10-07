@@ -1,5 +1,5 @@
 require 'securerandom'
-require 'identity-idp-functions/proof_address'
+require 'identity-idp-functions/proof_address_mock'
 
 RSpec.describe IdentityIdpFunctions::ProofAddress do
   let(:idp_api_auth_token) { SecureRandom.hex }
@@ -20,23 +20,6 @@ RSpec.describe IdentityIdpFunctions::ProofAddress do
       stub_const(
         'ENV',
         'IDP_API_AUTH_TOKEN' => idp_api_auth_token,
-        'lexisnexis_account_id' => 'abc123',
-        'lexisnexis_request_mode' => 'aaa',
-        'lexisnexis_username' => 'aaa',
-        'lexisnexis_password' => 'aaa',
-        'lexisnexis_base_url' => 'https://lexisnexis.example.com/',
-        'lexisnexis_phone_finder_workflow' => 'aaa',
-      )
-
-      stub_request(
-        :post,
-        'https://lexisnexis.example.com/restws/identity/v2/abc123/aaa/conversation'
-      ).to_return(
-        body: {
-          "Status" => {
-            "TransactionStatus" => "passed"
-          }
-        }.to_json
       )
 
       stub_request(:post, callback_url).
@@ -45,20 +28,20 @@ RSpec.describe IdentityIdpFunctions::ProofAddress do
             'Content-Type' => 'application/json',
             'X-API-AUTH-TOKEN' => idp_api_auth_token,
           },
-        ) do |request|
-          expect(JSON.parse(request.body, symbolize_names: true)).to eq(
-            address_result: {
-              exception: nil,
-              errors: {},
-              messages: [],
-              success: true,
-              timed_out: false,
-              context: { stages: [
-                { address: 'lexisnexis:phone_finder' }
-              ]},
-            }
-          )
-        end
+      ) do |request|
+            expect(JSON.parse(request.body, symbolize_names: true)).to eq(
+              address_result: {
+                exception: nil,
+                errors: {},
+                messages: [],
+                success: true,
+                timed_out: false,
+                context: { stages: [
+                  { address: 'IdentityIdpFunctions::MockProofers::AddressMock' }
+                ]}
+              }
+            )
+          end
     end
 
     let(:body) do
@@ -69,13 +52,13 @@ RSpec.describe IdentityIdpFunctions::ProofAddress do
     end
 
     it 'runs' do
-      IdentityIdpFunctions::ProofAddress.handle(event: { 'body' => body.to_json }, context: nil)
+      IdentityIdpFunctions::ProofAddressMock.handle(event: { 'body' => body.to_json }, context: nil)
     end
 
     context 'when called with a block' do
       it 'gives the results to the block instead of posting to the callback URL' do
         yielded_result = nil
-        IdentityIdpFunctions::ProofAddress.handle(
+        IdentityIdpFunctions::ProofAddressMock.handle(
           event: { 'body' => body.to_json },
           context: nil
         ) do |result|
@@ -90,8 +73,8 @@ RSpec.describe IdentityIdpFunctions::ProofAddress do
             success: true,
             timed_out: false,
             context: { stages: [
-              { address: 'lexisnexis:phone_finder' }
-            ]},
+              { address: 'IdentityIdpFunctions::MockProofers::AddressMock' }
+            ]}
           }
         )
 
