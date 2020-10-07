@@ -37,7 +37,7 @@ RSpec.describe IdentityIdpFunctions::ProofAddress do
                 success: true,
                 timed_out: false,
                 context: { stages: [
-                  { address: 'IdentityIdpFunctions::MockProofers::AddressMock' }
+                  { address: 'AddressMock' }
                 ]}
               }
             )
@@ -73,7 +73,7 @@ RSpec.describe IdentityIdpFunctions::ProofAddress do
             success: true,
             timed_out: false,
             context: { stages: [
-              { address: 'IdentityIdpFunctions::MockProofers::AddressMock' }
+              { address: 'AddressMock' }
             ]}
           }
         )

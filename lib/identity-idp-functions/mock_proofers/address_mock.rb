@@ -3,6 +3,8 @@ require 'proofer'
 module IdentityIdpFunctions
   module MockProofers
     class AddressMock < Proofer::Base
+      vendor_name 'AddressMock'
+
       required_attributes :phone
 
       optional_attributes :uuid, :uuid_prefix

@@ -27,7 +27,9 @@ module IdentityIdpFunctions
       end
 
       result = proofer_result.to_h
-      result[:context] = { stages: [address: IdentityIdpFunctions::MockProofers::AddressMock.inspect] }
+      result[:context] = { stages: [
+        address: IdentityIdpFunctions::MockProofers::AddressMock.vendor_name
+      ] }
       result[:timed_out] = proofer_result.timed_out?
 
       callback_body = {
