@@ -28,7 +28,9 @@ module IdentityIdpFunctions
 
       result = proofer_result.to_h
       result[:context] = { stages: [address: LexisNexis::PhoneFinder::Proofer.vendor_name] }
+
       result[:timed_out] = proofer_result.timed_out?
+      result[:exception] = proofer_result.exception.inspect if proofer_result.exception
 
       callback_body = {
         address_result: result,

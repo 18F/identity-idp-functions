@@ -1,10 +1,11 @@
 require 'proofer'
 require 'faraday'
 require 'retries'
-require_relative 'address_mock_client'
+require_relative 'resolution_mock_client'
+require_relative 'state_id_mock_client'
 
 module IdentityIdpFunctions
-  class ProofAddressMock
+  class ProofResolutionMock
     def self.handle(event:, context:, &callback_block)
       params = JSON.parse(event['body'], symbolize_names: true)
       new(
@@ -13,29 +14,35 @@ module IdentityIdpFunctions
       ).proof(&callback_block)
     end
 
-    attr_reader :applicant_pii, :callback_url, :idp_api_auth_token
+    attr_reader :applicant_pii, :callback_url, :should_proof_state_id, :idp_api_auth_token
 
-    def initialize(applicant_pii:, callback_url:, idp_api_auth_token:)
+    def initialize(applicant_pii:, callback_url:, should_proof_state_id:, idp_api_auth_token:)
       @applicant_pii = applicant_pii
       @callback_url = callback_url
+      @should_proof_state_id =should_proof_state_id
       @idp_api_auth_token = idp_api_auth_token
     end
 
     def proof(&callback_block)
       proofer_result = with_retries(**retry_options) do
-        mock_proofer.proof(applicant_pii)
+        resolution_mock_proofer.proof(applicant_pii)
       end
 
       result = proofer_result.to_h
       result[:context] = { stages: [
-        address: IdentityIdpFunctions::AddressMockClient.vendor_name
+        resolution: IdentityIdpFunctions::ResolutionMockClient.vendor_name
       ] }
 
       result[:timed_out] = proofer_result.timed_out?
       result[:exception] = proofer_result.exception.inspect if proofer_result.exception
 
+
+      if should_proof_state_id && result[:success]
+        proof_state_id(result)
+      end
+
       callback_body = {
-        address_result: result,
+        resolution_result: result,
       }
 
       if block_given?
@@ -43,6 +50,23 @@ module IdentityIdpFunctions
       else
         post_callback(callback_body: callback_body)
       end
+    end
+
+    def proof_state_id(result)
+      result[:context][:stages].push(state_id: IdentityIdpFunctions::StateIdMockClient.vendor_name)
+
+      proofer_result = with_retries(**retry_options) do
+        state_id_mock_proofer.proof(applicant_pii)
+      end
+
+      result.merge(proofer_result.to_h) do |key, orig, current|
+        key == :messages ? orig + current : current
+      end
+
+      result[:timed_out] = proofer_result.timed_out?
+      result[:exception] = proofer_result.exception.inspect if proofer_result.exception
+
+      result
     end
 
     def post_callback(callback_body:)
@@ -57,8 +81,12 @@ module IdentityIdpFunctions
       end
     end
 
-    def mock_proofer
-      IdentityIdpFunctions::AddressMockClient.new
+    def resolution_mock_proofer
+      IdentityIdpFunctions::ResolutionMockClient.new
+    end
+
+    def state_id_mock_proofer
+      IdentityIdpFunctions::StateIdMockClient.new
     end
 
     def retry_options
