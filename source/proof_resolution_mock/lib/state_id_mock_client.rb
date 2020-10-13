@@ -13,11 +13,11 @@ module IdentityIdpFunctions
     SUPPORTED_STATES = %w[
       AR AZ CO CT DC DE FL GA IA ID IL IN KY MA MD ME MI MO MS MT ND NE NJ NM PA
       RI SC SD TX VA VT WA WI WY
-    ].freeze
+    ].to_set.freeze
 
     SUPPORTED_STATE_ID_TYPES = %w[
       drivers_license drivers_permit state_id_card
-    ].freeze
+    ].to_set.freeze
 
     proof do |applicant, result|
       if state_not_supported?(applicant[:state_id_jurisdiction])

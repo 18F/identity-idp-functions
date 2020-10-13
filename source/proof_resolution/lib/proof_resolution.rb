@@ -1,3 +1,4 @@
+require 'json'
 require 'proofer'
 require 'faraday'
 require 'retries'

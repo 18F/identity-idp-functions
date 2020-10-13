@@ -18,7 +18,7 @@ module IdentityIdpFunctions
       ssn = applicant[:ssn]
 
       raise 'Failed to contact proofing vendor' if first_name =~ /Fail/i
-      raise 'Failed to contact proofing vendor' if ssn == '000-00-0000'
+      raise 'Failed to contact proofing vendor' if ssn == NO_CONTACT_SSN
 
       if first_name.match?(/Bad/i)
         result.add_error(:first_name, 'Unverified first name.')
