@@ -362,7 +362,7 @@ Resources:
       VpcId: !Sub
         - '{{resolve:ssm:/${Environment}/network/vpc/id:1}}'
         - Environment: !Ref environment
-      GroupDescription: Proof Address Lambda Function
+      GroupDescription: Proof Address Mock Lambda Function
       SecurityGroupEgress:
         - IpProtocol: tcp
           FromPort: 443
