@@ -49,6 +49,12 @@ Globals:
         NO_PROXY: !Sub
           - '{{resolve:ssm:/${Environment}/network/outboundproxy/no_proxy:1}}'
           - Environment: !Ref environment
+        ADDRESS_PROOF_RESULT_LAMBDA_TOKEN: !Sub
+          - '{{resolve:ssm-secure:/${Environment}/idp/doc-capture/address_proof_result_token:1}}'
+          - Environment: !Ref environment
+        RESOLUTION_PROOF_RESULT_LAMBDA_TOKEN: !Sub
+          - '{{resolve:ssm-secure:/${Environment}/idp/doc-capture/resolution_proof_result_token:1}}'
+          - Environment: !Ref environment
         ENVIRONMENT_NAME: !Ref environment
     Tags:
       environment: !Ref environment
