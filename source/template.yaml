@@ -49,12 +49,6 @@ Globals:
         NO_PROXY: !Sub
           - '{{resolve:ssm:/${Environment}/network/outboundproxy/no_proxy:1}}'
           - Environment: !Ref environment
-        ADDRESS_PROOF_RESULT_LAMBDA_TOKEN: !Sub
-          - '{{resolve:ssm-secure:/${Environment}/idp/doc-capture/address_proof_result_token:1}}'
-          - Environment: !Ref environment
-        RESOLUTION_PROOF_RESULT_LAMBDA_TOKEN: !Sub
-          - '{{resolve:ssm-secure:/${Environment}/idp/doc-capture/resolution_proof_result_token:1}}'
-          - Environment: !Ref environment
         ENVIRONMENT_NAME: !Ref environment
     Tags:
       environment: !Ref environment
@@ -180,6 +174,9 @@ Resources:
           KMS_KEY_ALIAS: !Sub
             - ${Environment}-idp-doc-capture
             - Environment: !Ref environment
+          ADDRESS_PROOF_RESULT_LAMBDA_TOKEN: !Sub
+            - '{{resolve:ssm-secure:/${Environment}/idp/doc-capture/address_proof_result_token:2}}'
+            - Environment: !Ref environment
       Policies:
         - Statement:
           - Sid: S3ObjectAccess
@@ -270,6 +267,10 @@ Resources:
         - ','
         - - !GetAtt DemoFunctionFunction.Arn
           - !GetAtt ProofAddressFunction.Arn
+          - !GetAtt ProofAddressFunction.Arn
+          - !GetAtt ProofAddressMockFuncion.Arn
+          - !GetAtt ProofResolutionFunction.Arn
+          - !GetAtt ProofResolutionMockFunction.Arn
 
   ApplicationLambdaGitSha:
     Type: AWS::SSM::Parameter
@@ -302,7 +303,9 @@ Resources:
           KMS_KEY_ALIAS: !Sub
             - ${Environment}-idp-doc-capture
             - Environment: !Ref environment
-          ENVIRONMENT_NAME: !Ref environment
+          ADDRESS_PROOF_RESULT_LAMBDA_TOKEN: !Sub
+            - '{{resolve:ssm-secure:/${Environment}/idp/doc-capture/address_proof_result_token:2}}'
+            - Environment: !Ref environment
       Policies:
         - Statement:
           - Sid: S3ObjectAccess
@@ -403,7 +406,9 @@ Resources:
           KMS_KEY_ALIAS: !Sub
             - ${Environment}-idp-doc-capture
             - Environment: !Ref environment
-          ENVIRONMENT_NAME: !Ref environment
+          RESOLUTION_PROOF_RESULT_LAMBDA_TOKEN: !Sub
+            - '{{resolve:ssm-secure:/${Environment}/idp/doc-capture/resolution_proof_result_token:2}}'
+            - Environment: !Ref environment
       Policies:
         - Statement:
           - Sid: S3ObjectAccess
@@ -504,7 +509,9 @@ Resources:
           KMS_KEY_ALIAS: !Sub
             - ${Environment}-idp-doc-capture
             - Environment: !Ref environment
-          ENVIRONMENT_NAME: !Ref environment
+          RESOLUTION_PROOF_RESULT_LAMBDA_TOKEN: !Sub
+            - '{{resolve:ssm-secure:/${Environment}/idp/doc-capture/resolution_proof_result_token:2}}'
+            - Environment: !Ref environment
       Policies:
         - Statement:
           - Sid: S3ObjectAccess
