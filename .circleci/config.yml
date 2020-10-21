@@ -8,19 +8,27 @@ executors:
 workflows:
   lambda-functions:
     jobs:
-      - build:
+      - build-specs
+      - build-deploy:
+          requires:
+            - build-specs
           context: login-sandbox
 
 jobs:
-  build:
+  build-specs:
+    executor: ubuntu-2004
+    steps:
+      - checkout
+      - run-specs
+
+  build-deploy:
     executor: ubuntu-2004
     steps:
       - brew-install
       - aws-cli-configure
       - sam-cli-install
       - checkout
-      - build-repo
-      - run-specs
+      - build-repo-s3-upload
 
 commands:
   sam-cli-install:
@@ -65,7 +73,7 @@ commands:
             aws configure set default.aws_secret_access_key $AWS_SECRET_ACCESS_KEY
             aws configure set default.region $AWS_DEFAULT_REGION
 
-  build-repo:
+  build-repo-s3-upload:
     steps:
       - run:
           name: "Validate SAM template"
