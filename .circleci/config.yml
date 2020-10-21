@@ -10,7 +10,8 @@ workflows:
     jobs:
       - build-specs
       - build-deploy:
-          requires: build-specs
+          requires:
+            - build-specs
           context: login-sandbox
 
 jobs:
