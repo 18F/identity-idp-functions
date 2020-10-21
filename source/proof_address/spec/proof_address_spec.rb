@@ -105,7 +105,6 @@ RSpec.describe IdentityIdpFunctions::ProofAddress do
       IdentityIdpFunctions::ProofAddress.new(
         callback_url: callback_url,
         applicant_pii: applicant_pii,
-        idp_api_auth_token: idp_api_auth_token,
       )
     end
 
@@ -116,6 +115,11 @@ RSpec.describe IdentityIdpFunctions::ProofAddress do
 
       stub_request(:post, callback_url).
         with(headers: { 'X-API-AUTH-TOKEN' => idp_api_auth_token })
+
+      stub_const(
+        'ENV',
+        'IDP_API_AUTH_TOKEN' => idp_api_auth_token,
+      )
     end
 
     context 'with a successful response from the proofer' do
