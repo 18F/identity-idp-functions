@@ -17,6 +17,7 @@ workflows:
 jobs:
   build-specs:
     executor: ubuntu-2004
+    steps:
       - checkout
       - run-specs
 
