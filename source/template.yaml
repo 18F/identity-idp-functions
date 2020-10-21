@@ -106,7 +106,7 @@ Resources:
               - kms:DescribeKey
               - kms:Decrypt
             Resource: !Sub
-              - '{{resolve:ssm:/${Environment}/idp/lambda/upload/kms/arn:1}}'
+              - '{{resolve:ssm:/${Environment}/idp/doc-capture/kms/arn:1}}'
               - Environment: !Ref environment
       VpcConfig:
         SecurityGroupIds:
@@ -209,7 +209,7 @@ Resources:
               - kms:DescribeKey
               - kms:Decrypt
             Resource: !Sub
-              - '{{resolve:ssm:/${Environment}/idp/lambda/upload/kms/arn:1}}'
+              - '{{resolve:ssm:/${Environment}/idp/doc-capture/kms/arn:1}}'
               - Environment: !Ref environment
       VpcConfig:
         SecurityGroupIds:
@@ -337,7 +337,7 @@ Resources:
               - kms:DescribeKey
               - kms:Decrypt
             Resource: !Sub
-              - '{{resolve:ssm:/${Environment}/idp/lambda/upload/kms/arn:1}}'
+              - '{{resolve:ssm:/${Environment}/idp/doc-capture/kms/arn:1}}'
               - Environment: !Ref environment
       VpcConfig:
         SecurityGroupIds:
@@ -440,7 +440,7 @@ Resources:
               - kms:DescribeKey
               - kms:Decrypt
             Resource: !Sub
-              - '{{resolve:ssm:/${Environment}/idp/lambda/upload/kms/arn:1}}'
+              - '{{resolve:ssm:/${Environment}/idp/doc-capture/kms/arn:1}}'
               - Environment: !Ref environment
       VpcConfig:
         SecurityGroupIds:
@@ -543,7 +543,7 @@ Resources:
               - kms:DescribeKey
               - kms:Decrypt
             Resource: !Sub
-              - '{{resolve:ssm:/${Environment}/idp/lambda/upload/kms/arn:1}}'
+              - '{{resolve:ssm:/${Environment}/idp/doc-capture/kms/arn:1}}'
               - Environment: !Ref environment
       VpcConfig:
         SecurityGroupIds:
