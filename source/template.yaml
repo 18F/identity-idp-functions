@@ -267,8 +267,7 @@ Resources:
         - ','
         - - !GetAtt DemoFunctionFunction.Arn
           - !GetAtt ProofAddressFunction.Arn
-          - !GetAtt ProofAddressFunction.Arn
-          - !GetAtt ProofAddressMockFuncion.Arn
+          - !GetAtt ProofAddressMockFunction.Arn
           - !GetAtt ProofResolutionFunction.Arn
           - !GetAtt ProofResolutionMockFunction.Arn
 
