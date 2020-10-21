@@ -174,9 +174,6 @@ Resources:
           KMS_KEY_ALIAS: !Sub
             - ${Environment}-idp-doc-capture
             - Environment: !Ref environment
-          ADDRESS_PROOF_RESULT_LAMBDA_TOKEN: !Sub
-            - '{{resolve:ssm-secure:/${Environment}/idp/doc-capture/address_proof_result_token:2}}'
-            - Environment: !Ref environment
       Policies:
         - Statement:
           - Sid: S3ObjectAccess
@@ -302,9 +299,6 @@ Resources:
           KMS_KEY_ALIAS: !Sub
             - ${Environment}-idp-doc-capture
             - Environment: !Ref environment
-          ADDRESS_PROOF_RESULT_LAMBDA_TOKEN: !Sub
-            - '{{resolve:ssm-secure:/${Environment}/idp/doc-capture/address_proof_result_token:2}}'
-            - Environment: !Ref environment
       Policies:
         - Statement:
           - Sid: S3ObjectAccess
@@ -405,9 +399,6 @@ Resources:
           KMS_KEY_ALIAS: !Sub
             - ${Environment}-idp-doc-capture
             - Environment: !Ref environment
-          RESOLUTION_PROOF_RESULT_LAMBDA_TOKEN: !Sub
-            - '{{resolve:ssm-secure:/${Environment}/idp/doc-capture/resolution_proof_result_token:2}}'
-            - Environment: !Ref environment
       Policies:
         - Statement:
           - Sid: S3ObjectAccess
@@ -507,9 +498,6 @@ Resources:
               Region: !Ref AWS::Region
           KMS_KEY_ALIAS: !Sub
             - ${Environment}-idp-doc-capture
-            - Environment: !Ref environment
-          RESOLUTION_PROOF_RESULT_LAMBDA_TOKEN: !Sub
-            - '{{resolve:ssm-secure:/${Environment}/idp/doc-capture/resolution_proof_result_token:2}}'
             - Environment: !Ref environment
       Policies:
         - Statement:
