@@ -13,7 +13,7 @@ module IdentityIdpFunctions
   end
 
   def helper_path(helper_name)
-    File.expand_path(File.join(root_path, 'source', 'aws-ruby-sdk', 'lib', "#{helper_name}.rb"))
+    File.expand_path(File.join(root_path, 'source', 'aws-ruby-sdk', "#{helper_name}.rb"))
   end
 
   def root_path
