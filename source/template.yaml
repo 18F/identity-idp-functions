@@ -588,7 +588,6 @@ Resources:
       CompatibleRuntimes:
         - ruby2.7
       RetentionPolicy: Retain
-      CodeUri: aws-ruby-sdk/lib/
     Metadata:
       BuildMethod: ruby2.7
 
