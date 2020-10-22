@@ -15,19 +15,21 @@ RSpec.describe IdentityIdpFunctions::ProofAddress do
     }
   end
 
+  before do
+    stub_const(
+      'ENV',
+      'IDP_API_AUTH_TOKEN' => idp_api_auth_token,
+      'lexisnexis_account_id' => 'abc123',
+      'lexisnexis_request_mode' => 'aaa',
+      'lexisnexis_username' => 'aaa',
+      'lexisnexis_password' => 'aaa',
+      'lexisnexis_base_url' => 'https://lexisnexis.example.com/',
+      'lexisnexis_phone_finder_workflow' => 'aaa',
+    )
+  end
+
   describe '.handle' do
     before do
-      stub_const(
-        'ENV',
-        'IDP_API_AUTH_TOKEN' => idp_api_auth_token,
-        'lexisnexis_account_id' => 'abc123',
-        'lexisnexis_request_mode' => 'aaa',
-        'lexisnexis_username' => 'aaa',
-        'lexisnexis_password' => 'aaa',
-        'lexisnexis_base_url' => 'https://lexisnexis.example.com/',
-        'lexisnexis_phone_finder_workflow' => 'aaa',
-      )
-
       stub_request(
         :post,
         'https://lexisnexis.example.com/restws/identity/v2/abc123/aaa/conversation'
@@ -115,11 +117,6 @@ RSpec.describe IdentityIdpFunctions::ProofAddress do
 
       stub_request(:post, callback_url).
         with(headers: { 'X-API-AUTH-TOKEN' => idp_api_auth_token })
-
-      stub_const(
-        'ENV',
-        'IDP_API_AUTH_TOKEN' => idp_api_auth_token,
-      )
     end
 
     context 'with a successful response from the proofer' do
