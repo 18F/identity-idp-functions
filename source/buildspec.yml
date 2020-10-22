@@ -17,7 +17,8 @@ phases:
           --stack-name $STACK_NAME \
           --parameter-overrides gitsha=$GITSHA \
           environment=$ENVIRONMENT \
-          --capabilities CAPABILITY_IAM
+          --capabilities CAPABILITY_IAM \
+          --no-fail-on-empty-changeset
   post_build:
     commands:
       - APPLICATION_FUNCTIONS=$(aws ssm get-parameter --name /$ENVIRONMENT/idp/lambda/application-functions --query 'Parameter.Value' --output text)
