@@ -11,4 +11,5 @@ gem 'proofer', github: '18F/identity-proofer-gem', tag: 'v2.7.0'
 group :test do
   gem 'rspec'
   gem 'webmock'
+  gem 'pry-byebug'
 end
