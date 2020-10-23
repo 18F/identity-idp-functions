@@ -21,13 +21,15 @@ RSpec.describe IdentityIdpFunctions::ProofResolutionMock do
     }
   end
 
+  before do
+    stub_const(
+      'ENV',
+      'IDP_API_AUTH_TOKEN' => idp_api_auth_token,
+    )
+  end
+
   describe '.handle' do
     before do
-      stub_const(
-        'ENV',
-        'IDP_API_AUTH_TOKEN' => idp_api_auth_token,
-      )
-
       stub_request(:post, callback_url).
         with(
           headers: {
@@ -106,11 +108,6 @@ RSpec.describe IdentityIdpFunctions::ProofResolutionMock do
     before do
       stub_request(:post, callback_url).
         with(headers: { 'X-API-AUTH-TOKEN' => idp_api_auth_token })
-
-      stub_const(
-        'ENV',
-        'IDP_API_AUTH_TOKEN' => idp_api_auth_token,
-      )
     end
 
     context 'with a successful response from the proofer' do
@@ -164,6 +161,20 @@ RSpec.describe IdentityIdpFunctions::ProofResolutionMock do
 
       it 'does not call state_id proof if resolution proof is successful' do
         expect_any_instance_of(IdentityIdpFunctions::StateIdMockClient).not_to receive(:proof)
+        function.proof
+
+        expect(WebMock).to have_requested(:post, callback_url)
+      end
+    end
+
+    context 'when there are no params in the ENV' do
+      before do
+        ENV.clear
+      end
+
+      it 'loads secrets from SSM' do
+        expect(function.ssm_helper).to receive(:load).with('resolution_proof_result_lambda_token').and_return(idp_api_auth_token)
+
         function.proof
 
         expect(WebMock).to have_requested(:post, callback_url)

@@ -3,6 +3,7 @@ require 'faraday'
 require 'retries'
 require_relative 'resolution_mock_client'
 require_relative 'state_id_mock_client'
+require_relative 'ssm_helper' if !defined?(IdentityIdpFunctions::SsmHelper)
 
 module IdentityIdpFunctions
   class ProofResolutionMock
@@ -70,7 +71,7 @@ module IdentityIdpFunctions
         Faraday.post(
           callback_url,
           callback_body.to_json,
-          "X-API-AUTH-TOKEN" => ENV.fetch('IDP_API_AUTH_TOKEN'),
+          "X-API-AUTH-TOKEN" => api_auth_token,
           "Content-Type" => 'application/json',
           "Accept" => 'application/json'
         )
@@ -83,6 +84,16 @@ module IdentityIdpFunctions
 
     def state_id_mock_proofer
       IdentityIdpFunctions::StateIdMockClient.new
+    end
+
+    def api_auth_token
+      @api_auth_token ||= ENV.fetch("IDP_API_AUTH_TOKEN") do
+        ssm_helper.load('resolution_proof_result_lambda_token')
+      end
+    end
+
+    def ssm_helper
+      @ssm_helper ||= SsmHelper.new
     end
 
     def retry_options

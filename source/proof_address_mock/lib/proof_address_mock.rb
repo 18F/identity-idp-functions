@@ -2,6 +2,7 @@ require 'proofer'
 require 'faraday'
 require 'retries'
 require_relative 'address_mock_client'
+require_relative 'ssm_helper' if !defined?(IdentityIdpFunctions::SsmHelper)
 
 module IdentityIdpFunctions
   class ProofAddressMock
@@ -46,11 +47,21 @@ module IdentityIdpFunctions
         Faraday.post(
           callback_url,
           callback_body.to_json,
-          "X-API-AUTH-TOKEN" => ENV.fetch('IDP_API_AUTH_TOKEN'),
+          "X-API-AUTH-TOKEN" => api_auth_token,
           "Content-Type" => 'application/json',
           "Accept" => 'application/json'
         )
       end
+    end
+
+    def api_auth_token
+      @api_auth_token ||= ENV.fetch("IDP_API_AUTH_TOKEN") do
+        ssm_helper.load('address_proof_result_lambda_token')
+      end
+    end
+
+    def ssm_helper
+      @ssm_helper ||= SsmHelper.new
     end
 
     def mock_proofer

@@ -22,21 +22,23 @@ RSpec.describe IdentityIdpFunctions::ProofResolution do
     }
   end
 
+  before do
+    stub_const(
+      'ENV',
+      'IDP_API_AUTH_TOKEN' => idp_api_auth_token,
+      'lexisnexis_account_id' => 'abc123',
+      'lexisnexis_request_mode' => 'aaa',
+      'lexisnexis_username' => 'aaa',
+      'lexisnexis_password' => 'aaa',
+      'lexisnexis_base_url' => 'https://lexisnexis.example.com/',
+      'lexisnexis_instant_verify_workflow' => 'aaa',
+      'aamva_public_key' => 'aamvamaa',
+      'aamva_private_key' => 'aamvamaa',
+    )
+  end
+
   describe '.handle' do
     before do
-      stub_const(
-        'ENV',
-        'IDP_API_AUTH_TOKEN' => idp_api_auth_token,
-        'lexisnexis_account_id' => 'abc123',
-        'lexisnexis_request_mode' => 'aaa',
-        'lexisnexis_username' => 'aaa',
-        'lexisnexis_password' => 'aaa',
-        'lexisnexis_base_url' => 'https://lexisnexis.example.com/',
-        'lexisnexis_instant_verify_workflow' => 'aaa',
-        'aamva_public_key' => 'aamvamaa',
-        'aamva_private_key' => 'aamvamaa',
-      )
-
       stub_request(
         :post,
         'https://lexisnexis.example.com/restws/identity/v2/abc123/aaa/conversation'
@@ -137,11 +139,6 @@ RSpec.describe IdentityIdpFunctions::ProofResolution do
 
       stub_request(:post, callback_url).
         with(headers: { 'X-API-AUTH-TOKEN' => idp_api_auth_token })
-
-      stub_const(
-        'ENV',
-        'IDP_API_AUTH_TOKEN' => idp_api_auth_token,
-      )
     end
 
     context 'with a successful response from the proofer' do
@@ -215,6 +212,45 @@ RSpec.describe IdentityIdpFunctions::ProofResolution do
         function.proof
 
         expect(WebMock).to have_requested(:post, callback_url)
+      end
+    end
+
+    context 'when there are no params in the ENV' do
+      before do
+        ENV.clear
+      end
+
+      it 'loads secrets from SSM and puts them in the ENV' do
+        expect(function.ssm_helper).to receive(:load).with('resolution_proof_result_lambda_token').and_return(idp_api_auth_token)
+        expect(function.ssm_helper).to receive(:load).with('lexisnexis_account_id').and_return('aaa')
+        expect(function.ssm_helper).to receive(:load).with('lexisnexis_request_mode').and_return('aaa')
+        expect(function.ssm_helper).to receive(:load).with('lexisnexis_username').and_return('aaa')
+        expect(function.ssm_helper).to receive(:load).with('lexisnexis_password').and_return('aaa')
+        expect(function.ssm_helper).to receive(:load).with('lexisnexis_base_url').and_return('aaa')
+        expect(function.ssm_helper).to receive(:load).with('lexisnexis_instant_verify_workflow').and_return('aaa')
+        expect(function.ssm_helper).to receive(:load).with('aamva_public_key').and_return('aaa')
+        expect(function.ssm_helper).to receive(:load).with('aamva_private_key').and_return('aaa')
+
+        expect(lexisnexis_proofer).to receive(:proof).
+          and_return(Proofer::Result.new)
+
+        expect(aamva_proofer).to receive(:proof).
+          and_return(Proofer::Result.new)
+
+        function.proof
+
+        expect(WebMock).to have_requested(:post, callback_url)
+
+        expect(ENV).to include(
+          'lexisnexis_account_id' => 'aaa',
+          'lexisnexis_request_mode' => 'aaa',
+          'lexisnexis_username' => 'aaa',
+          'lexisnexis_password' => 'aaa',
+          'lexisnexis_base_url' => 'aaa',
+          'lexisnexis_instant_verify_workflow' => 'aaa',
+          'aamva_public_key' => 'aaa',
+          'aamva_private_key' => 'aaa',
+        )
       end
     end
   end

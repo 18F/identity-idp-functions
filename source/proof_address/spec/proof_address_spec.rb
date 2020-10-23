@@ -177,5 +177,37 @@ RSpec.describe IdentityIdpFunctions::ProofAddress do
         expect(a_request(:post, callback_url)).to have_been_made.times(3)
       end
     end
+
+    context 'when there are no params in the ENV' do
+      before do
+        ENV.clear
+
+        expect(lexisnexis_proofer).to receive(:proof).
+          and_return(Proofer::Result.new)
+      end
+
+      it 'loads secrets from SSM and puts them in the ENV' do
+        expect(function.ssm_helper).to receive(:load).with('address_proof_result_lambda_token').and_return(idp_api_auth_token)
+        expect(function.ssm_helper).to receive(:load).with('lexisnexis_account_id').and_return('aaa')
+        expect(function.ssm_helper).to receive(:load).with('lexisnexis_request_mode').and_return('aaa')
+        expect(function.ssm_helper).to receive(:load).with('lexisnexis_username').and_return('aaa')
+        expect(function.ssm_helper).to receive(:load).with('lexisnexis_password').and_return('aaa')
+        expect(function.ssm_helper).to receive(:load).with('lexisnexis_base_url').and_return('aaa')
+        expect(function.ssm_helper).to receive(:load).with('lexisnexis_phone_finder_workflow').and_return('aaa')
+
+        function.proof
+
+        expect(WebMock).to have_requested(:post, callback_url)
+
+        expect(ENV).to include(
+          'lexisnexis_account_id' => 'aaa',
+          'lexisnexis_request_mode' => 'aaa',
+          'lexisnexis_username' => 'aaa',
+          'lexisnexis_password' => 'aaa',
+          'lexisnexis_base_url' => 'aaa',
+          'lexisnexis_phone_finder_workflow' => 'aaa',
+        )
+      end
+    end
   end
 end

@@ -2,8 +2,7 @@ require 'proofer'
 require 'lexisnexis'
 require 'faraday'
 require 'retries'
-
-require_relative './ssm_helper' if !defined?(IdentityIdpFunctions::SsmHelper)
+require_relative 'ssm_helper' if !defined?(IdentityIdpFunctions::SsmHelper)
 
 module IdentityIdpFunctions
   class ProofAddress
@@ -57,7 +56,7 @@ module IdentityIdpFunctions
 
     def api_auth_token
       @api_auth_token ||= ENV.fetch("IDP_API_AUTH_TOKEN") do
-        ssm_helper.load('address_proof_result_token')
+        ssm_helper.load('address_proof_result_lambda_token')
       end
     end
 
