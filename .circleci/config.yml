@@ -161,8 +161,8 @@ commands:
           name: "Copy packages to S3 prod"
           command: |
             cd source
-            aws s3 cp identity-infra-functions.template.yaml s3://$prod_DEPLOY_S3_BUCKET/circleci/identity-infra-functions/$CIRCLE_BRANCH/ --profile prod
-            aws s3 cp identity-infra-functions.zip s3://$prod_DEPLOY_S3_BUCKET/circleci/identity-infra-functions/$CIRCLE_BRANCH/ --profile prod
+            aws s3 cp identity-idp-functions.template.yaml s3://$prod_DEPLOY_S3_BUCKET/circleci/identity-idp-functions/$CIRCLE_BRANCH/ --profile prod
+            aws s3 cp identity-idp-functions.zip s3://$prod_DEPLOY_S3_BUCKET/circleci/identity-idp-functions/$CIRCLE_BRANCH/ --profile prod
 
   run-specs:
     steps:
