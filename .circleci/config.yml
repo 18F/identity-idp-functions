@@ -9,10 +9,26 @@ workflows:
   lambda-functions:
     jobs:
       - build-specs
-      - build-deploy:
+      - build-package:
+          filters:
+            branches:
+              ignore:
+                - master
           requires:
             - build-specs
-          context: login-sandbox
+          context: 
+            - login-sandbox
+            - login-prod
+      - build-package-copy:
+          filters:
+            branches:
+              only:
+                - master
+          requires:
+            - build-specs
+          context:
+            - login-sandbox
+            - login-prod
 
 jobs:
   build-specs:
@@ -21,14 +37,26 @@ jobs:
       - checkout
       - run-specs
 
-  build-deploy:
+  build-package:
     executor: ubuntu-2004
     steps:
       - brew-install
       - aws-cli-configure
       - sam-cli-install
       - checkout
-      - build-repo-s3-upload
+      - build-repo
+
+  build-package-copy:
+    executor: ubuntu-2004
+    steps:
+      - brew-install
+      - aws-cli-configure
+      - aws-cli-configure-prod
+      - sam-cli-install
+      - checkout
+      - build-repo
+      - copy-to-s3
+      - copy-to-s3-prod
 
 commands:
   sam-cli-install:
@@ -72,8 +100,17 @@ commands:
             aws configure set default.aws_access_key_id $AWS_ACCESS_KEY_ID
             aws configure set default.aws_secret_access_key $AWS_SECRET_ACCESS_KEY
             aws configure set default.region $AWS_DEFAULT_REGION
+            
+  aws-cli-configure-prod:
+    steps:
+      - run:
+          name: "Configure AWS CLI Prod"
+          command: | 
+            aws configure set profile.prod.aws_access_key_id $prod_AWS_ACCESS_KEY_ID
+            aws configure set profile.prod.aws_secret_access_key $prod_AWS_SECRET_ACCESS_KEY
+            aws configure set profile.prod.region $AWS_DEFAULT_REGION
 
-  build-repo-s3-upload:
+  build-repo:
     steps:
       - run:
           name: "Validate SAM template"
@@ -108,8 +145,24 @@ commands:
             zip identity-idp-functions.zip identity-idp-functions.template.yaml
             zip identity-idp-functions.zip buildspec.yml
             zip identity-idp-functions.zip gitsha.txt
+  
+  copy-to-s3:
+    steps:
+      - run:
+          name: "Copy packages to S3"
+          command: |
+            cd source
             aws s3 cp identity-idp-functions.template.yaml s3://$DEPLOY_S3_BUCKET/circleci/identity-idp-functions/$CIRCLE_BRANCH/
             aws s3 cp identity-idp-functions.zip s3://$DEPLOY_S3_BUCKET/circleci/identity-idp-functions/$CIRCLE_BRANCH/
+
+  copy-to-s3-prod:
+    steps:
+      - run:
+          name: "Copy packages to S3 prod"
+          command: |
+            cd source
+            aws s3 cp identity-infra-functions.template.yaml s3://$prod_DEPLOY_S3_BUCKET/circleci/identity-infra-functions/$CIRCLE_BRANCH/ --profile prod
+            aws s3 cp identity-infra-functions.zip s3://$prod_DEPLOY_S3_BUCKET/circleci/identity-infra-functions/$CIRCLE_BRANCH/ --profile prod
 
   run-specs:
     steps:

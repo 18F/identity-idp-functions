@@ -57,6 +57,9 @@ Resources:
   DemoFunctionFunction:
     Type: AWS::Serverless::Function
     Properties:
+      FunctionName: !Sub
+        - ${Environment}-idp-functions-DemoFunctionFunction
+        - Environment: !Ref environment
       CodeUri: demo_function/lib/
       Handler: demo_function.IdentityIdpFunctions::DemoFunction.handle
       AutoPublishAlias: !Ref environment
@@ -157,6 +160,9 @@ Resources:
   ProofAddressFunction:
     Type: AWS::Serverless::Function 
     Properties:
+      FunctionName: !Sub
+        - ${Environment}-idp-functions-ProofAddressFunction
+        - Environment: !Ref environment
       CodeUri: proof_address/lib/
       Handler: proof_address.IdentityIdpFunctions::ProofAddress.handle
       AutoPublishAlias: !Ref environment
@@ -280,6 +286,9 @@ Resources:
   ProofAddressMockFunction:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
+      FunctionName: !Sub
+        - ${Environment}-idp-functions-ProofAddressMockFunction
+        - Environment: !Ref environment
       CodeUri: proof_address_mock/lib/
       Handler: proof_address_mock.IdentityIdpFunctions::ProofAddressMock.handle
       MemorySize: 128
@@ -380,6 +389,9 @@ Resources:
   ProofResolutionFunction:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
+      FunctionName: !Sub
+        - ${Environment}-idp-functions-ProofResolutionFunction
+        - Environment: !Ref environment
       CodeUri: proof_resolution/lib/
       Handler: proof_resolution.IdentityIdpFunctions::ProofResolution.handle
       MemorySize: 128
@@ -480,6 +492,9 @@ Resources:
   ProofResolutionMockFunction:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
+      FunctionName: !Sub
+        - ${Environment}-idp-functions-ProofResolutionMockFunction
+        - Environment: !Ref environment
       CodeUri: proof_resolution_mock/lib/
       Handler: proof_resolution_mock.IdentityIdpFunctions::ProofResolutionMock.handle
       MemorySize: 128
