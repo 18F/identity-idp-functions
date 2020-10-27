@@ -9,13 +9,17 @@ workflows:
   lambda-functions:
     jobs:
       - build-specs
-      - build-deploy:
+      - build-package:
+          filters:
+            branches:
+              ignore:
+                - master
           requires:
             - build-specs
           context: 
             - login-sandbox
             - login-prod
-      - build-deploy-copy:
+      - build-package-copy:
           filters:
             branches:
               only:
@@ -33,7 +37,7 @@ jobs:
       - checkout
       - run-specs
 
-  build-deploy:
+  build-package:
     executor: ubuntu-2004
     steps:
       - brew-install
@@ -42,7 +46,7 @@ jobs:
       - checkout
       - build-repo
 
-  build-deploy-copy:
+  build-package-copy:
     executor: ubuntu-2004
     steps:
       - brew-install
