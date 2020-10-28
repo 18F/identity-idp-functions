@@ -9,7 +9,7 @@ require '/opt/ruby/lib/ssm_helper' if !defined?(IdentityIdpFunctions::SsmHelper)
 module IdentityIdpFunctions
   class ProofAddress
     def self.handle(event:, context:, &callback_block)
-      params = event.transform_keys(&:to_sym)
+      params = JSON.parse(event.to_json, symbolize_names: true)
       new(**params).proof(&callback_block)
     end
 
