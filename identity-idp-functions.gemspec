@@ -25,6 +25,8 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
   spec.add_dependency "retries", ">= 0.0.5"
+  spec.add_dependency 'aws-sdk-ssm', '>= 1.55'
+  spec.add_dependency 'aws-sdk-s3', '>= 1.73'
 
   spec.add_development_dependency "rake", "~> 13"
 end
