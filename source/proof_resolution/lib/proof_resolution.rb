@@ -10,7 +10,7 @@ require '/opt/ruby/lib/ssm_helper' if !defined?(IdentityIdpFunctions::SsmHelper)
 module IdentityIdpFunctions
   class ProofResolution
     def self.handle(event:, context:, &callback_block)
-      params = JSON.parse(event['body'], symbolize_names: true)
+      params = event.transform_keys(&:to_sym)
       new(**params).proof(&callback_block)
     end
 
