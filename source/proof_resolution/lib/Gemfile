@@ -2,8 +2,9 @@ source "https://rubygems.org"
 
 ruby '~> 2.7.0'
 
-gem 'faraday'
+gem 'aws-sdk-ssm', '~> 1.55'
 gem 'aamva', github: '18F/identity-aamva-api-client-gem', tag: 'v3.4.1'
+gem 'faraday'
 gem 'lexisnexis', github: '18F/identity-lexisnexis-api-client-gem', tag: 'v2.4.1'
 gem 'proofer', github: '18F/identity-proofer-gem', tag: 'v2.7.0'
 gem 'retries'

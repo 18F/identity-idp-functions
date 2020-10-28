@@ -4,7 +4,7 @@ require 'json'
 require 'proofer'
 require 'retries'
 require_relative 'address_mock_client'
-require_relative 'ssm_helper' if !defined?(IdentityIdpFunctions::SsmHelper)
+require '/opt/ruby/lib/ssm_helper' if !defined?(IdentityIdpFunctions::SsmHelper)
 
 module IdentityIdpFunctions
   class ProofAddressMock

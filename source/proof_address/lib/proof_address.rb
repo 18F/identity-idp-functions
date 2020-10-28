@@ -4,7 +4,7 @@ require 'json'
 require 'retries'
 require 'proofer'
 require 'lexisnexis'
-require_relative 'ssm_helper' if !defined?(IdentityIdpFunctions::SsmHelper)
+require '/opt/ruby/lib/ssm_helper' if !defined?(IdentityIdpFunctions::SsmHelper)
 
 module IdentityIdpFunctions
   class ProofAddress

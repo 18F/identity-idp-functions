@@ -5,7 +5,7 @@ require 'retries'
 require 'proofer'
 require_relative 'resolution_mock_client'
 require_relative 'state_id_mock_client'
-require_relative 'ssm_helper' if !defined?(IdentityIdpFunctions::SsmHelper)
+require '/opt/ruby/lib/ssm_helper' if !defined?(IdentityIdpFunctions::SsmHelper)
 
 module IdentityIdpFunctions
   class ProofResolutionMock
