@@ -1,7 +1,9 @@
+require 'bundler/setup' if !defined?(Bundler)
+require 'faraday'
+require 'json'
+require 'retries'
 require 'proofer'
 require 'lexisnexis'
-require 'faraday'
-require 'retries'
 require_relative 'ssm_helper' if !defined?(IdentityIdpFunctions::SsmHelper)
 
 module IdentityIdpFunctions

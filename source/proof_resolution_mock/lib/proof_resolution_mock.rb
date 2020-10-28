@@ -1,6 +1,8 @@
-require 'proofer'
+require 'bundler/setup' if !defined?(Bundler)
 require 'faraday'
+require 'json'
 require 'retries'
+require 'proofer'
 require_relative 'resolution_mock_client'
 require_relative 'state_id_mock_client'
 require_relative 'ssm_helper' if !defined?(IdentityIdpFunctions::SsmHelper)

@@ -1,5 +1,7 @@
-require 'proofer'
+require 'bundler/setup' if !defined?(Bundler)
 require 'faraday'
+require 'json'
+require 'proofer'
 require 'retries'
 require_relative 'address_mock_client'
 require_relative 'ssm_helper' if !defined?(IdentityIdpFunctions::SsmHelper)

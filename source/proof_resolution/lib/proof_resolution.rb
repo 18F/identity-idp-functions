@@ -1,7 +1,8 @@
-require 'json'
-require 'proofer'
+require 'bundler/setup' if !defined?(Bundler)
 require 'faraday'
+require 'json'
 require 'retries'
+require 'proofer'
 require 'aamva'
 require 'lexisnexis'
 require_relative 'ssm_helper' if !defined?(IdentityIdpFunctions::SsmHelper)
