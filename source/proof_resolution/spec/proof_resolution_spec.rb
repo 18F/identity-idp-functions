@@ -77,7 +77,7 @@ RSpec.describe IdentityIdpFunctions::ProofResolution do
           end
     end
 
-    let(:body) do
+    let(:event) do
       {
         callback_url: callback_url,
         should_proof_state_id: true,
@@ -87,7 +87,7 @@ RSpec.describe IdentityIdpFunctions::ProofResolution do
 
     it 'runs' do
       expect_any_instance_of(Aamva::Proofer).to receive(:proof).and_return(Proofer::Result.new)
-      IdentityIdpFunctions::ProofResolution.handle(event: { 'body' => body.to_json }, context: nil)
+      IdentityIdpFunctions::ProofResolution.handle(event: event, context: nil)
     end
 
     context 'when called with a block' do
@@ -95,7 +95,7 @@ RSpec.describe IdentityIdpFunctions::ProofResolution do
         expect_any_instance_of(Aamva::Proofer).to receive(:proof).and_return(Proofer::Result.new)
         yielded_result = nil
         IdentityIdpFunctions::ProofResolution.handle(
-          event: { 'body' => body.to_json },
+          event: event,
           context: nil
         ) do |result|
           yielded_result = result

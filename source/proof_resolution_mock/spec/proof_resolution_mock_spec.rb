@@ -53,7 +53,7 @@ RSpec.describe IdentityIdpFunctions::ProofResolutionMock do
           end
     end
 
-    let(:body) do
+    let(:event) do
       {
         callback_url: callback_url,
         should_proof_state_id: true,
@@ -62,14 +62,14 @@ RSpec.describe IdentityIdpFunctions::ProofResolutionMock do
     end
 
     it 'runs' do
-      IdentityIdpFunctions::ProofResolutionMock.handle(event: { 'body' => body.to_json }, context: nil)
+      IdentityIdpFunctions::ProofResolutionMock.handle(event: event, context: nil)
     end
 
     context 'when called with a block' do
       it 'gives the results to the block instead of posting to the callback URL' do
         yielded_result = nil
         IdentityIdpFunctions::ProofResolutionMock.handle(
-          event: { 'body' => body.to_json },
+          event: event,
           context: nil
         ) do |result|
           yielded_result = result
