@@ -151,7 +151,7 @@ RSpec.describe IdentityIdpFunctions::ProofAddressMock do
       end
 
       it 'loads secrets from SSM' do
-        expect(function.ssm_helper).to receive(:load).with('address_proof_result_lambda_token').and_return(idp_api_auth_token)
+        expect(function.ssm_helper).to receive(:load).with('address_proof_result_token').and_return(idp_api_auth_token)
 
         function.proof
 

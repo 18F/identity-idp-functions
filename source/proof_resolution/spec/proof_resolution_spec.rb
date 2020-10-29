@@ -221,7 +221,7 @@ RSpec.describe IdentityIdpFunctions::ProofResolution do
       end
 
       it 'loads secrets from SSM and puts them in the ENV' do
-        expect(function.ssm_helper).to receive(:load).with('resolution_proof_result_lambda_token').and_return(idp_api_auth_token)
+        expect(function.ssm_helper).to receive(:load).with('resolution_proof_result_token').and_return(idp_api_auth_token)
         expect(function.ssm_helper).to receive(:load).with('lexisnexis_account_id').and_return('aaa')
         expect(function.ssm_helper).to receive(:load).with('lexisnexis_request_mode').and_return('aaa')
         expect(function.ssm_helper).to receive(:load).with('lexisnexis_username').and_return('aaa')
