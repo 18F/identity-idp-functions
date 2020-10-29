@@ -22,3 +22,4 @@ module IdentityIdpFunctions
 end
 
 require IdentityIdpFunctions.helper_path('ssm_helper')
+require IdentityIdpFunctions.helper_path('faraday_helper')
