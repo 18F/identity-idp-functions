@@ -250,13 +250,11 @@ Resources:
           FromPort: 443
           ToPort: 443
           CidrIp: 0.0.0.0/0
-      SecurityGroupIngress:
+      SecurityGroupEgress:
         - IpProtocol: tcp
-          FromPort: 443
-          ToPort: 443
-          SourceSecurityGroupId: !Sub 
-              - '{{resolve:ssm:/${Environment}/network/securitygroup/idp/id:1}}'
-              - Environment: !Ref environment
+          FromPort: 3128
+          ToPort: 3128
+          CidrIp: 0.0.0.0/0
 
   # add all functions that need gitsha alias to this list
   ApplicationLambdaArns:
@@ -379,11 +377,10 @@ Resources:
           FromPort: 443
           ToPort: 443
           CidrIp: 0.0.0.0/0
-      SecurityGroupIngress:
+      SecurityGroupEgress:
         - IpProtocol: tcp
-          FromPort: 443
-          ToPort: 443
-          # Should be another security group or VPC CIDR block
+          FromPort: 3128
+          ToPort: 3128
           CidrIp: 0.0.0.0/0
 
   ProofResolutionFunction:
@@ -482,11 +479,10 @@ Resources:
           FromPort: 443
           ToPort: 443
           CidrIp: 0.0.0.0/0
-      SecurityGroupIngress:
+      SecurityGroupEgress:
         - IpProtocol: tcp
-          FromPort: 443
-          ToPort: 443
-          # Should be another security group or VPC CIDR block
+          FromPort: 3128
+          ToPort: 3128
           CidrIp: 0.0.0.0/0
 
   ProofResolutionMockFunction:
@@ -585,11 +581,10 @@ Resources:
           FromPort: 443
           ToPort: 443
           CidrIp: 0.0.0.0/0
-      SecurityGroupIngress:
+      SecurityGroupEgress:
         - IpProtocol: tcp
-          FromPort: 443
-          ToPort: 443
-          # Should be another security group or VPC CIDR block
+          FromPort: 3128
+          ToPort: 3128
           CidrIp: 0.0.0.0/0
 
   AWSRubySDKLayer:
