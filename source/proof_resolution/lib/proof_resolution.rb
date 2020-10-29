@@ -1,14 +1,16 @@
 require 'bundler/setup' if !defined?(Bundler)
-require 'faraday'
 require 'json'
 require 'retries'
 require 'proofer'
 require 'aamva'
 require 'lexisnexis'
+require '/opt/ruby/lib/faraday_helper' if !defined?(IdentityIdpFunctions::FaradayHelper)
 require '/opt/ruby/lib/ssm_helper' if !defined?(IdentityIdpFunctions::SsmHelper)
 
 module IdentityIdpFunctions
   class ProofResolution
+    include IdentityIdpFunctions::FaradayHelper
+
     def self.handle(event:, context:, &callback_block)
       params = JSON.parse(event.to_json, symbolize_names: true)
       new(**params).proof(&callback_block)
@@ -25,7 +27,7 @@ module IdentityIdpFunctions
     def proof(&callback_block)
       set_up_env!
 
-      proofer_result = with_retries(**retry_options) do
+      proofer_result = with_retries(**faraday_retry_options) do
         lexisnexis_proofer.proof(applicant_pii)
       end
 
@@ -55,7 +57,7 @@ module IdentityIdpFunctions
     def proof_state_id(result)
       result[:context][:stages].push(state_id: Aamva::Proofer.vendor_name)
 
-      proofer_result = with_retries(**retry_options) do
+      proofer_result = with_retries(**faraday_retry_options) do
         aamva_proofer.proof(applicant_pii)
       end
 
@@ -85,8 +87,8 @@ module IdentityIdpFunctions
     end
 
     def post_callback(callback_body:)
-      with_retries(**retry_options) do
-        Faraday.post(
+      with_retries(**faraday_retry_options) do
+        build_faraday.post(
           callback_url,
           callback_body.to_json,
           "X-API-AUTH-TOKEN" => api_auth_token,
@@ -112,13 +114,6 @@ module IdentityIdpFunctions
 
     def ssm_helper
       @ssm_helper ||= SsmHelper.new
-    end
-
-    def retry_options
-      {
-        max_tries: 3,
-        rescue: [Faraday::TimeoutError, Faraday::ConnectionFailed],
-      }
     end
   end
 end
