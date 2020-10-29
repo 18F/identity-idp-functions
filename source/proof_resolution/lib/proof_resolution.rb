@@ -106,7 +106,7 @@ module IdentityIdpFunctions
 
     def api_auth_token
       @api_auth_token ||= ENV.fetch("IDP_API_AUTH_TOKEN") do
-        ssm_helper.load('resolution_proof_result_lambda_token')
+        ssm_helper.load('resolution_proof_result_token')
       end
     end
 
