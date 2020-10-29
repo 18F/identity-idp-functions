@@ -63,7 +63,7 @@ RSpec.describe IdentityIdpFunctions::ProofAddress do
         end
     end
 
-    let(:body) do
+    let(:event) do
       {
         callback_url: callback_url,
         applicant_pii: applicant_pii,
@@ -71,14 +71,14 @@ RSpec.describe IdentityIdpFunctions::ProofAddress do
     end
 
     it 'runs' do
-      IdentityIdpFunctions::ProofAddress.handle(event: { 'body' => body.to_json }, context: nil)
+      IdentityIdpFunctions::ProofAddress.handle(event: event, context: nil)
     end
 
     context 'when called with a block' do
       it 'gives the results to the block instead of posting to the callback URL' do
         yielded_result = nil
         IdentityIdpFunctions::ProofAddress.handle(
-          event: { 'body' => body.to_json },
+          event: event,
           context: nil
         ) do |result|
           yielded_result = result
