@@ -78,7 +78,7 @@ module IdentityIdpFunctions
 
     def api_auth_token
       @api_auth_token ||= ENV.fetch("IDP_API_AUTH_TOKEN") do
-        ssm_helper.load('document_proof_result_lambda_token')
+        ssm_helper.load('document_proof_result_token')
       end
     end
 
@@ -105,7 +105,6 @@ module IdentityIdpFunctions
         facial_match_url: ENV['acuant_facial_match_url'],
         passlive_url: ENV['acuant_passlive_url'],
         timeout: ENV['acuant_timeout'],
-        # exception_notifier: method(:notify_exception),
       )
     end
 
@@ -128,10 +127,10 @@ module IdentityIdpFunctions
 
     def s3_client
       @s3_client ||= Aws::S3::Client.new(
-          region: ec2_data.region,
-          http_open_timeout: 5,
-          http_read_timeout: 5,
-          )
+        region: ec2_data.region,
+        http_open_timeout: 5,
+        http_read_timeout: 5,
+      )
     end
 
     def read_file(url, iv)
