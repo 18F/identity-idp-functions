@@ -82,11 +82,13 @@ RSpec.describe IdentityIdpFunctions::ProofDocument do
           expect(JSON.parse(request.body, symbolize_names: true)).to eq(
             document_result: {
               acuant_error:{ code:nil, message: nil}, billed: true, errors:{},
+              liveness_assessment: 'Live',
               liveness_score: nil,
               match_score: nil,
               raw_alerts: [],
               result: 'Passed',
               success: true,
+              exception: nil,
             }
           )
         end
@@ -114,6 +116,8 @@ RSpec.describe IdentityIdpFunctions::ProofDocument do
             raw_alerts: [],
             result: 'Passed',
             success: true,
+            liveness_assessment: 'Live',
+            exception: nil,
           }
         )
 
