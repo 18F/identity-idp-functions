@@ -40,6 +40,7 @@ RSpec.describe IdentityIdpFunctions::ProofDocument do
       'acuant_facial_match_url' => 'https://facial_match.example.com',
       'acuant_passlive_url' => 'https://liveness.example.com',
       'acuant_timeout' => 60,
+      's3_region' => 'us-foo-2',
     )
 
     stub_request(:get, 'http://169.254.169.254/2016-09-02/dynamic/instance-identity/document').

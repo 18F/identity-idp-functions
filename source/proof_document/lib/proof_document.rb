@@ -91,6 +91,7 @@ module IdentityIdpFunctions
         acuant_facial_match_url
         acuant_passlive_url
         acuant_timeout
+        s3_region
       ].each do |env_key|
         ENV[env_key] ||= ssm_helper.load(env_key)
       end
@@ -121,13 +122,9 @@ module IdentityIdpFunctions
 
     private
 
-    def ec2_data
-      @ec2_data ||= LoginGov::Hostdata::EC2.load
-    end
-
     def s3_client
       @s3_client ||= Aws::S3::Client.new(
-        region: ec2_data.region,
+        region: ENV['s3_region'],
         http_open_timeout: 5,
         http_read_timeout: 5,
       )
