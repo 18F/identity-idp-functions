@@ -65,8 +65,8 @@ module IdentityIdpFunctions
     end
 
     def post_callback(callback_body:)
-      with_retries(**retry_options) do
-        Faraday.post(
+      with_retries(**faraday_retry_options) do
+        build_faraday.post(
           callback_url,
           callback_body.to_json,
           "X-API-AUTH-TOKEN" => api_auth_token,
