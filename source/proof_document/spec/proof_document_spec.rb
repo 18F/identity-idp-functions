@@ -207,7 +207,7 @@ RSpec.describe IdentityIdpFunctions::ProofDocument do
       end
 
       it 'loads secrets from SSM and puts them in the ENV' do
-        expect(function.ssm_helper).to receive(:load).with('document_proof_result_lambda_token').and_return(idp_api_auth_token)
+        expect(function.ssm_helper).to receive(:load).with('document_proof_result_token').and_return(idp_api_auth_token)
         expect(function.ssm_helper).to receive(:load).with('acuant_assure_id_password').and_return('aaa')
         expect(function.ssm_helper).to receive(:load).with('acuant_assure_id_subscription_id').and_return('aaa')
         expect(function.ssm_helper).to receive(:load).with('acuant_assure_id_url').and_return('aaa')
