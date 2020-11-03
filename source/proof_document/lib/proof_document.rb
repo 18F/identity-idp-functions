@@ -4,10 +4,12 @@ require 'json'
 require 'retries'
 require '/opt/ruby/lib/ssm_helper' if !defined?(IdentityIdpFunctions::SsmHelper)
 require 'openssl'
-require 'login_gov/hostdata'
+require "aws-sdk-s3"
 
 module IdentityIdpFunctions
   class ProofDocument
+    include IdentityIdpFunctions::FaradayHelper
+
     def self.handle(event:, context:, &callback_block)
       params = JSON.parse(event.to_json, symbolize_names: true)
       new(**params).proof(&callback_block)

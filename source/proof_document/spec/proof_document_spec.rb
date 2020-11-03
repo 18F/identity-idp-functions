@@ -43,12 +43,6 @@ RSpec.describe IdentityIdpFunctions::ProofDocument do
       's3_region' => 'us-foo-2',
     )
 
-    stub_request(:get, 'http://169.254.169.254/2016-09-02/dynamic/instance-identity/document').
-        to_return(body: {
-            'region' => 'us-west-1',
-            'accountId' => '12345',
-        }.to_json)
-
     url = URI.join('https://example.com', '/AssureIDService/Document/Instance')
     stub_request(:post, url).to_return(body: '"this-is-a-test-instance-id"')
     stub_request(:post, "https://example.com/AssureIDService/Document/this-is-a-test-instance-id/Image?light=0&side=0").to_return(body: '')
@@ -57,7 +51,9 @@ RSpec.describe IdentityIdpFunctions::ProofDocument do
     stub_request(:get, "https://example.com/AssureIDService/Document/this-is-a-test-instance-id/Field/Image?key=Photo").to_return(body: '')
     stub_request(:post, "https://facial_match.example.com/api/v1/facematch").to_return(body:'{"IsMatch":true}')
     stub_request(:post, "https://liveness.example.com/api/v1/liveness").to_return(body:'{"LivenessResult":{"LivenessAssessment": "Live"}}')
+    stub_request(:post, "https://example.login.gov/api/callbacks/proof-document/:token").to_return(body: '')
 
+    allow(Aws::S3::Client).to receive(:new).and_return(Aws::S3::Client.new(stub_responses: true))
     allow_any_instance_of(OpenSSL::Cipher::AES).to receive(:update).and_return('foo')
     allow_any_instance_of(OpenSSL::Cipher::AES).to receive(:final).and_return('bar')
     allow_any_instance_of(IdentityDocAuth::Acuant::Responses::GetResultsResponse).to receive(:pii_from_doc).and_return(applicant_pii)
@@ -211,10 +207,12 @@ RSpec.describe IdentityIdpFunctions::ProofDocument do
         expect(function.ssm_helper).to receive(:load).with('document_proof_result_token').and_return(idp_api_auth_token)
         expect(function.ssm_helper).to receive(:load).with('acuant_assure_id_password').and_return('aaa')
         expect(function.ssm_helper).to receive(:load).with('acuant_assure_id_subscription_id').and_return('aaa')
-        expect(function.ssm_helper).to receive(:load).with('acuant_assure_id_url').and_return('aaa')
+        expect(function.ssm_helper).to receive(:load).with('acuant_assure_id_url').and_return('https://example.com')
         expect(function.ssm_helper).to receive(:load).with('acuant_assure_id_username').and_return('aaa')
-        expect(function.ssm_helper).to receive(:load).with('acuant_facial_match_url').and_return('aaa')
-        expect(function.ssm_helper).to receive(:load).with('acuant_passlive_url').and_return('aaa')
+        expect(function.ssm_helper).to receive(:load).with('acuant_facial_match_url').and_return('https://facial_match.example.com')
+        expect(function.ssm_helper).to receive(:load).with('acuant_passlive_url').and_return('https://liveness.example.com')
+        expect(function.ssm_helper).to receive(:load).with('acuant_timeout').and_return(60)
+        expect(function.ssm_helper).to receive(:load).with('s3_region').and_return('us-foo-2')
 
         function.proof
 
