@@ -8,6 +8,7 @@ executors:
 workflows:
   lambda-functions:
     jobs:
+      - lints
       - build-specs
       - build-package:
           filters:
