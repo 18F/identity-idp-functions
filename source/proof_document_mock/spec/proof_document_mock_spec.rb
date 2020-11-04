@@ -58,11 +58,11 @@ RSpec.describe IdentityIdpFunctions::ProofDocumentMock do
       }
     end
 
-    it 'runs' do
+    xit 'runs' do
       IdentityIdpFunctions::ProofDocumentMock.handle(event: event, context: nil)
     end
 
-    context 'when called with a block' do
+    xcontext 'when called with a block' do
       it 'gives the results to the block instead of posting to the callback URL' do
         yielded_result = nil
         IdentityIdpFunctions::ProofDocumentMock.handle(
