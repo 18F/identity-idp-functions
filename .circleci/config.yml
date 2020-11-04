@@ -182,7 +182,7 @@ commands:
           name: Run rspec
           command: bundle exec rspec
 
-  run-specs:
+  run-lints:
     steps:
       - bundle-install
       - run:
