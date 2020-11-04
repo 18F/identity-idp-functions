@@ -2,6 +2,7 @@ require 'bundler/setup' if !defined?(Bundler)
 require 'faraday'
 require 'json'
 require 'retries'
+require '/opt/ruby/lib/faraday_helper' if !defined?(IdentityIdpFunctions::FaradayHelper)
 require '/opt/ruby/lib/ssm_helper' if !defined?(IdentityIdpFunctions::SsmHelper)
 require 'openssl'
 require "aws-sdk-s3"
@@ -42,11 +43,11 @@ module IdentityIdpFunctions
     def proof(&callback_block)
       set_up_env!
 
-      proofer_result = with_retries(**retry_options) do
+      proofer_result = with_retries(**faraday_retry_options) do
         document_proofer.post_images(
-          front_image: read_file(front_image_url, front_image_iv),
-          back_image: read_file(back_image_url, back_image_iv),
-          selfie_image: read_file(selfie_image_url, selfie_image_iv),
+          front_image: decrypt_from_s3(front_image_url, front_image_iv),
+          back_image: decrypt_from_s3(back_image_url, back_image_iv),
+          selfie_image: decrypt_from_s3(selfie_image_url, selfie_image_iv),
           liveness_checking_enabled: liveness_checking_enabled,
         )
       end
@@ -115,13 +116,6 @@ module IdentityIdpFunctions
       @ssm_helper ||= SsmHelper.new
     end
 
-    def retry_options
-      {
-        max_tries: 3,
-        rescue: [Faraday::TimeoutError, Faraday::ConnectionFailed],
-      }
-    end
-
     private
 
     def s3_client
@@ -132,7 +126,7 @@ module IdentityIdpFunctions
       )
     end
 
-    def read_file(url, iv)
+    def decrypt_from_s3(url, iv)
       encrypted_image = fetch_file(url)
       decrypt(encrypted_image, iv)
     end

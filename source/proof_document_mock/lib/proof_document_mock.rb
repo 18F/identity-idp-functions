@@ -4,10 +4,13 @@ require 'json'
 require 'proofer'
 require 'retries'
 require_relative 'document_mock_client'
+require '/opt/ruby/lib/faraday_helper' if !defined?(IdentityIdpFunctions::FaradayHelper)
 require '/opt/ruby/lib/ssm_helper' if !defined?(IdentityIdpFunctions::SsmHelper)
 
 module IdentityIdpFunctions
   class ProofDocumentMock
+    include IdentityIdpFunctions::FaradayHelper
+
     def self.handle(event:, context:, &callback_block)
       params = JSON.parse(event.to_json, symbolize_names: true)
       new(**params).proof(&callback_block)
@@ -39,7 +42,7 @@ module IdentityIdpFunctions
     end
 
     def proof(&callback_block)
-      proofer_result = with_retries(**retry_options) do
+      proofer_result = with_retries(**faraday_retry_options) do
         mock_proofer.proof(
             encryption_key: encryption_key,
             front_image_iv: front_image_iv,
@@ -72,8 +75,8 @@ module IdentityIdpFunctions
     end
 
     def post_callback(callback_body:)
-      with_retries(**retry_options) do
-        Faraday.post(
+      with_retries(**faraday_retry_options) do
+        build_faraday.post(
           callback_url,
           callback_body.to_json,
           "X-API-AUTH-TOKEN" => api_auth_token,
@@ -95,13 +98,6 @@ module IdentityIdpFunctions
 
     def mock_proofer
       IdentityIdpFunctions::DocumentMockClient.new
-    end
-
-    def retry_options
-      {
-        max_tries: 3,
-        rescue: [Faraday::TimeoutError, Faraday::ConnectionFailed],
-      }
     end
   end
 end
