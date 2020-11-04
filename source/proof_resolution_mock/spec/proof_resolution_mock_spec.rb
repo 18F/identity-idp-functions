@@ -36,21 +36,21 @@ RSpec.describe IdentityIdpFunctions::ProofResolutionMock do
             'Content-Type' => 'application/json',
             'X-API-AUTH-TOKEN' => idp_api_auth_token,
           },
-      ) do |request|
-            expect(JSON.parse(request.body, symbolize_names: true)).to eq(
-              resolution_result: {
-                exception: nil,
-                errors: {},
-                messages: [],
-                success: true,
-                timed_out: false,
-                context: { stages: [
-                  { resolution: 'ResolutionMock' },
-                  { state_id: 'StateIdMock' },
-                ]}
-              }
-            )
-          end
+        ) do |request|
+        expect(JSON.parse(request.body, symbolize_names: true)).to eq(
+          resolution_result: {
+            exception: nil,
+            errors: {},
+            messages: [],
+            success: true,
+            timed_out: false,
+            context: { stages: [
+              { resolution: 'ResolutionMock' },
+              { state_id: 'StateIdMock' },
+            ] },
+          },
+        )
+      end
     end
 
     let(:event) do
@@ -70,7 +70,7 @@ RSpec.describe IdentityIdpFunctions::ProofResolutionMock do
         yielded_result = nil
         IdentityIdpFunctions::ProofResolutionMock.handle(
           event: event,
-          context: nil
+          context: nil,
         ) do |result|
           yielded_result = result
         end
@@ -85,8 +85,8 @@ RSpec.describe IdentityIdpFunctions::ProofResolutionMock do
             context: { stages: [
               { resolution: 'ResolutionMock' },
               { state_id: 'StateIdMock' },
-            ]}
-          }
+            ] },
+          },
         )
 
         expect(a_request(:post, callback_url)).to_not have_been_made
@@ -173,7 +173,8 @@ RSpec.describe IdentityIdpFunctions::ProofResolutionMock do
       end
 
       it 'loads secrets from SSM' do
-        expect(function.ssm_helper).to receive(:load).with('resolution_proof_result_token').and_return(idp_api_auth_token)
+        expect(function.ssm_helper).to receive(:load).
+          with('resolution_proof_result_token').and_return(idp_api_auth_token)
 
         function.proof
 

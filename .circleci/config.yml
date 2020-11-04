@@ -16,7 +16,7 @@ workflows:
                 - master
           requires:
             - build-specs
-          context: 
+          context:
             - login-sandbox
             - login-prod
       - build-package-copy:
@@ -36,6 +36,11 @@ jobs:
     steps:
       - checkout
       - run-specs
+
+  lints:
+    steps:
+      - checkout
+      - run-lints
 
   build-package:
     executor: ubuntu-2004
@@ -83,6 +88,12 @@ commands:
             eval $(/home/linuxbrew/.linuxbrew/bin/brew shellenv)
             brew --version
 
+  bundle-install:
+    steps:
+      - run: gem update --system
+      - run: gem install bundler
+      - run: bundle install --path vendor/bundle
+
   aws-cli-install:
     steps:
       - run:
@@ -100,12 +111,12 @@ commands:
             aws configure set default.aws_access_key_id $AWS_ACCESS_KEY_ID
             aws configure set default.aws_secret_access_key $AWS_SECRET_ACCESS_KEY
             aws configure set default.region $AWS_DEFAULT_REGION
-            
+
   aws-cli-configure-prod:
     steps:
       - run:
           name: "Configure AWS CLI Prod"
-          command: | 
+          command: |
             aws configure set profile.prod.aws_access_key_id $prod_AWS_ACCESS_KEY_ID
             aws configure set profile.prod.aws_secret_access_key $prod_AWS_SECRET_ACCESS_KEY
             aws configure set profile.prod.region $AWS_DEFAULT_REGION
@@ -145,7 +156,7 @@ commands:
             zip identity-idp-functions.zip identity-idp-functions.template.yaml
             zip identity-idp-functions.zip buildspec.yml
             zip identity-idp-functions.zip gitsha.txt
-  
+
   copy-to-s3:
     steps:
       - run:
@@ -166,9 +177,14 @@ commands:
 
   run-specs:
     steps:
-      - run: gem update --system
-      - run: gem install bundler
-      - run: bundle install --path vendor/bundle
+      - bundle-install
       - run:
           name: Run rspec
           command: bundle exec rspec
+
+  run-specs:
+    steps:
+      - bundle-install
+      - run:
+          name: Run rubocop
+          command: bundle exec rubocop

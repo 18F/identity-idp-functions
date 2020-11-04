@@ -28,20 +28,20 @@ RSpec.describe IdentityIdpFunctions::ProofAddressMock do
             'Content-Type' => 'application/json',
             'X-API-AUTH-TOKEN' => idp_api_auth_token,
           },
-      ) do |request|
-            expect(JSON.parse(request.body, symbolize_names: true)).to eq(
-              address_result: {
-                exception: nil,
-                errors: {},
-                messages: [],
-                success: true,
-                timed_out: false,
-                context: { stages: [
-                  { address: 'AddressMock' }
-                ]}
-              }
-            )
-          end
+        ) do |request|
+        expect(JSON.parse(request.body, symbolize_names: true)).to eq(
+          address_result: {
+            exception: nil,
+            errors: {},
+            messages: [],
+            success: true,
+            timed_out: false,
+            context: { stages: [
+              { address: 'AddressMock' },
+            ] },
+          },
+        )
+      end
     end
 
     let(:event) do
@@ -60,7 +60,7 @@ RSpec.describe IdentityIdpFunctions::ProofAddressMock do
         yielded_result = nil
         IdentityIdpFunctions::ProofAddressMock.handle(
           event: event,
-          context: nil
+          context: nil,
         ) do |result|
           yielded_result = result
         end
@@ -73,9 +73,9 @@ RSpec.describe IdentityIdpFunctions::ProofAddressMock do
             success: true,
             timed_out: false,
             context: { stages: [
-              { address: 'AddressMock' }
-            ]}
-          }
+              { address: 'AddressMock' },
+            ] },
+          },
         )
 
         expect(a_request(:post, callback_url)).to_not have_been_made
@@ -151,7 +151,8 @@ RSpec.describe IdentityIdpFunctions::ProofAddressMock do
       end
 
       it 'loads secrets from SSM' do
-        expect(function.ssm_helper).to receive(:load).with('address_proof_result_token').and_return(idp_api_auth_token)
+        expect(function.ssm_helper).to receive(:load).
+          with('address_proof_result_token').and_return(idp_api_auth_token)
 
         function.proof
 
