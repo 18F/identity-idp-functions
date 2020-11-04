@@ -47,7 +47,8 @@ module IdentityIdpFunctions
         document_proofer.post_images(
           front_image: decrypt_from_s3(front_image_url, front_image_iv),
           back_image: decrypt_from_s3(back_image_url, back_image_iv),
-          selfie_image: decrypt_from_s3(selfie_image_url, selfie_image_iv),
+          selfie_image: \
+            liveness_checking_enabled ? decrypt_from_s3(selfie_image_url, selfie_image_iv) : '',
           liveness_checking_enabled: liveness_checking_enabled,
         )
       end
