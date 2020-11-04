@@ -1,7 +1,7 @@
-require 'undler/setup'
-require 'dentity-idp-functions'
-require 'ebmock/rspec'
-require 'etries'
+require 'bundler/setup'
+require 'identity-idp-functions'
+require 'webmock/rspec'
+require 'retries'
 
 Retries.sleep_enabled = false
 
