@@ -38,6 +38,7 @@ jobs:
       - run-specs
 
   lints:
+    executor: ubuntu-2004
     steps:
       - checkout
       - run-lints
