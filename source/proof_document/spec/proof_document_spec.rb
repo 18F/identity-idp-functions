@@ -52,9 +52,10 @@ RSpec.describe IdentityIdpFunctions::ProofDocument do
     stub_request(:post, "https://liveness.example.com/api/v1/liveness").to_return(body:'{"LivenessResult":{"LivenessAssessment": "Live"}}')
     stub_request(:post, "https://example.login.gov/api/callbacks/proof-document/:token").to_return(body: '')
 
-    allow(Aws::S3::Client).to receive(:new).and_return(Aws::S3::Client.new(stub_responses: true))
-    allow_any_instance_of(OpenSSL::Cipher::AES).to receive(:update).and_return('foo')
-    allow_any_instance_of(OpenSSL::Cipher::AES).to receive(:final).and_return('bar')
+
+    s3_client = Aws::S3::Client.new(stub_responses: true)
+    s3_client.stub_responses(:get_object, { body: "\xDE\x9E[\xF8\xB8\xABZ\xD2E\xA8\xC5`'\x18\xAF\xC7" })
+    allow(Aws::S3::Client).to receive(:new).and_return(s3_client)
     allow_any_instance_of(IdentityDocAuth::Acuant::Responses::GetResultsResponse).to receive(:pii_from_doc).and_return(applicant_pii)
   end
 
