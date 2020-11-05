@@ -32,13 +32,9 @@ RSpec.describe IdentityIdpFunctions::ProofAddress do
     before do
       stub_request(
         :post,
-        'https://lexisnexis.example.com/restws/identity/v2/abc123/aaa/conversation'
+        'https://lexisnexis.example.com/restws/identity/v2/abc123/aaa/conversation',
       ).to_return(
-        body: {
-          "Status" => {
-            "TransactionStatus" => "passed"
-          }
-        }.to_json
+        body: { 'Status' => { 'TransactionStatus' => 'passed' } }.to_json,
       )
 
       stub_request(:post, callback_url).
@@ -56,9 +52,9 @@ RSpec.describe IdentityIdpFunctions::ProofAddress do
               success: true,
               timed_out: false,
               context: { stages: [
-                { address: 'lexisnexis:phone_finder' }
-              ]},
-            }
+                { address: 'lexisnexis:phone_finder' },
+              ] },
+            },
           )
         end
     end
@@ -79,7 +75,7 @@ RSpec.describe IdentityIdpFunctions::ProofAddress do
         yielded_result = nil
         IdentityIdpFunctions::ProofAddress.handle(
           event: event,
-          context: nil
+          context: nil,
         ) do |result|
           yielded_result = result
         end
@@ -92,9 +88,9 @@ RSpec.describe IdentityIdpFunctions::ProofAddress do
             success: true,
             timed_out: false,
             context: { stages: [
-              { address: 'lexisnexis:phone_finder' }
-            ]},
-          }
+              { address: 'lexisnexis:phone_finder' },
+            ] },
+          },
         )
 
         expect(a_request(:post, callback_url)).to_not have_been_made
@@ -187,13 +183,20 @@ RSpec.describe IdentityIdpFunctions::ProofAddress do
       end
 
       it 'loads secrets from SSM and puts them in the ENV' do
-        expect(function.ssm_helper).to receive(:load).with('address_proof_result_token').and_return(idp_api_auth_token)
-        expect(function.ssm_helper).to receive(:load).with('lexisnexis_account_id').and_return('aaa')
-        expect(function.ssm_helper).to receive(:load).with('lexisnexis_request_mode').and_return('aaa')
-        expect(function.ssm_helper).to receive(:load).with('lexisnexis_username').and_return('aaa')
-        expect(function.ssm_helper).to receive(:load).with('lexisnexis_password').and_return('aaa')
-        expect(function.ssm_helper).to receive(:load).with('lexisnexis_base_url').and_return('aaa')
-        expect(function.ssm_helper).to receive(:load).with('lexisnexis_phone_finder_workflow').and_return('aaa')
+        expect(function.ssm_helper).to receive(:load).
+          with('address_proof_result_token').and_return(idp_api_auth_token)
+        expect(function.ssm_helper).to receive(:load).
+          with('lexisnexis_account_id').and_return('aaa')
+        expect(function.ssm_helper).to receive(:load).
+          with('lexisnexis_request_mode').and_return('aaa')
+        expect(function.ssm_helper).to receive(:load).
+          with('lexisnexis_username').and_return('aaa')
+        expect(function.ssm_helper).to receive(:load).
+          with('lexisnexis_password').and_return('aaa')
+        expect(function.ssm_helper).to receive(:load).
+          with('lexisnexis_base_url').and_return('aaa')
+        expect(function.ssm_helper).to receive(:load).
+          with('lexisnexis_phone_finder_workflow').and_return('aaa')
 
         function.proof
 
