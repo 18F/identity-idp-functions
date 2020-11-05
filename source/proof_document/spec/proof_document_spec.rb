@@ -40,7 +40,6 @@ RSpec.describe IdentityIdpFunctions::ProofDocument do
       'acuant_facial_match_url' => 'https://facial_match.example.com',
       'acuant_passlive_url' => 'https://liveness.example.com',
       'acuant_timeout' => 60,
-      's3_region' => 'us-foo-2',
     )
 
     url = URI.join('https://example.com', '/AssureIDService/Document/Instance')
@@ -216,7 +215,6 @@ RSpec.describe IdentityIdpFunctions::ProofDocument do
         expect(function.ssm_helper).to receive(:load).with('acuant_facial_match_url').and_return('https://facial_match.example.com')
         expect(function.ssm_helper).to receive(:load).with('acuant_passlive_url').and_return('https://liveness.example.com')
         expect(function.ssm_helper).to receive(:load).with('acuant_timeout').and_return(60)
-        expect(function.ssm_helper).to receive(:load).with('s3_region').and_return('us-foo-2')
 
         function.proof
 
