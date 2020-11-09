@@ -1,17 +1,17 @@
 require 'bundler/setup' if !defined?(Bundler)
+require 'aws-sdk-s3'
 require 'faraday'
 require 'json'
 require 'retries'
 require '/opt/ruby/lib/faraday_helper' if !defined?(IdentityIdpFunctions::FaradayHelper)
 require '/opt/ruby/lib/ssm_helper' if !defined?(IdentityIdpFunctions::SsmHelper)
 require 'openssl'
-require "aws-sdk-s3"
 
 module IdentityIdpFunctions
   class ProofDocument
     include IdentityIdpFunctions::FaradayHelper
 
-    def self.handle(event:, context:, &callback_block)
+    def self.handle(event:, context:, &callback_block) # rubocop:disable Lint/UnusedMethodArgument
       params = JSON.parse(event.to_json, symbolize_names: true)
       new(**params).proof(&callback_block)
     end
@@ -40,7 +40,7 @@ module IdentityIdpFunctions
       @callback_url = callback_url
     end
 
-    def proof(&callback_block)
+    def proof
       set_up_env!
 
       proofer_result = with_retries(**faraday_retry_options) do
@@ -73,15 +73,15 @@ module IdentityIdpFunctions
         build_faraday.post(
           callback_url,
           callback_body.to_json,
-          "X-API-AUTH-TOKEN" => api_auth_token,
-          "Content-Type" => 'application/json',
-          "Accept" => 'application/json'
+          'X-API-AUTH-TOKEN' => api_auth_token,
+          'Content-Type' => 'application/json',
+          'Accept' => 'application/json',
         )
       end
     end
 
     def api_auth_token
-      @api_auth_token ||= ENV.fetch("IDP_API_AUTH_TOKEN") do
+      @api_auth_token ||= ENV.fetch('IDP_API_AUTH_TOKEN') do
         ssm_helper.load('document_proof_result_token')
       end
     end
@@ -132,13 +132,13 @@ module IdentityIdpFunctions
 
     def fetch_file(url)
       uri = URI.parse(url)
-      document_bucket = uri.host.gsub('.amazonaws.com','')
+      document_bucket = uri.host.gsub('.amazonaws.com', '')
       resp = s3_client.get_object(bucket: document_bucket, key: uri.path[1..-1])
       resp.body.read
     end
 
     def decrypt(encrypted_image, iv)
-      cipher = OpenSSL::Cipher::AES.new(256, :CBC)
+      cipher = OpenSSL::Cipher.new('aes-256-cbc')
       cipher.decrypt
       cipher.iv = iv
       cipher.key = encryption_key

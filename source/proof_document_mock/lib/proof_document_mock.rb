@@ -11,7 +11,7 @@ module IdentityIdpFunctions
   class ProofDocumentMock
     include IdentityIdpFunctions::FaradayHelper
 
-    def self.handle(event:, context:, &callback_block)
+    def self.handle(event:, context:, &callback_block) # rubocop:disable Lint/UnusedMethodArgument
       params = JSON.parse(event.to_json, symbolize_names: true)
       new(**params).proof(&callback_block)
     end
@@ -41,24 +41,24 @@ module IdentityIdpFunctions
       @callback_url = callback_url
     end
 
-    def proof(&callback_block)
+    def proof
       proofer_result = with_retries(**faraday_retry_options) do
         mock_proofer.proof(
-            encryption_key: encryption_key,
-            front_image_iv: front_image_iv,
-            back_image_iv: back_image_iv,
-            selfie_image_iv: selfie_image_iv,
-            front_image_url: front_image_url,
-            back_image_url: back_image_url,
-            selfie_image_url: selfie_image_url,
-            liveness_checking_enabled: liveness_checking_enabled,
-            callback_url: callback_url,
+          encryption_key: encryption_key,
+          front_image_iv: front_image_iv,
+          back_image_iv: back_image_iv,
+          selfie_image_iv: selfie_image_iv,
+          front_image_url: front_image_url,
+          back_image_url: back_image_url,
+          selfie_image_url: selfie_image_url,
+          liveness_checking_enabled: liveness_checking_enabled,
+          callback_url: callback_url,
         )
       end
 
       result = proofer_result.to_h
       result[:context] = { stages: [
-        document: IdentityIdpFunctions::DocumentMockClient.vendor_name
+        { document: IdentityIdpFunctions::DocumentMockClient.vendor_name },
       ] }
 
       result[:exception] = proofer_result.exception.inspect if proofer_result.exception
@@ -79,15 +79,15 @@ module IdentityIdpFunctions
         build_faraday.post(
           callback_url,
           callback_body.to_json,
-          "X-API-AUTH-TOKEN" => api_auth_token,
-          "Content-Type" => 'application/json',
-          "Accept" => 'application/json'
+          'X-API-AUTH-TOKEN' => api_auth_token,
+          'Content-Type' => 'application/json',
+          'Accept' => 'application/json',
         )
       end
     end
 
     def api_auth_token
-      @api_auth_token ||= ENV.fetch("IDP_API_AUTH_TOKEN") do
+      @api_auth_token ||= ENV.fetch('IDP_API_AUTH_TOKEN') do
         ssm_helper.load('document_proof_result_token')
       end
     end
