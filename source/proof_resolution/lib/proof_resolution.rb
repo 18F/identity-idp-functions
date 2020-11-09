@@ -11,7 +11,7 @@ module IdentityIdpFunctions
   class ProofResolution
     include IdentityIdpFunctions::FaradayHelper
 
-    def self.handle(event:, context:, &callback_block)
+    def self.handle(event:, context:, &callback_block) # rubocop:disable Lint/UnusedMethodArgument
       params = JSON.parse(event.to_json, symbolize_names: true)
       new(**params).proof(&callback_block)
     end
@@ -24,7 +24,7 @@ module IdentityIdpFunctions
       @should_proof_state_id = should_proof_state_id
     end
 
-    def proof(&callback_block)
+    def proof
       set_up_env!
 
       proofer_result = with_retries(**faraday_retry_options) do
@@ -37,7 +37,6 @@ module IdentityIdpFunctions
 
       result[:timed_out] = proofer_result.timed_out?
       result[:exception] = proofer_result.exception.inspect if proofer_result.exception
-
 
       if should_proof_state_id && result[:success]
         proof_state_id(result)
@@ -91,9 +90,9 @@ module IdentityIdpFunctions
         build_faraday.post(
           callback_url,
           callback_body.to_json,
-          "X-API-AUTH-TOKEN" => api_auth_token,
-          "Content-Type" => 'application/json',
-          "Accept" => 'application/json'
+          'X-API-AUTH-TOKEN' => api_auth_token,
+          'Content-Type' => 'application/json',
+          'Accept' => 'application/json',
         )
       end
     end
@@ -107,7 +106,7 @@ module IdentityIdpFunctions
     end
 
     def api_auth_token
-      @api_auth_token ||= ENV.fetch("IDP_API_AUTH_TOKEN") do
+      @api_auth_token ||= ENV.fetch('IDP_API_AUTH_TOKEN') do
         ssm_helper.load('resolution_proof_result_token')
       end
     end

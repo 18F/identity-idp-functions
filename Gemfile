@@ -8,7 +8,8 @@ gem 'proofer', github: '18F/identity-proofer-gem', tag: 'v2.7.0'
 gem 'identity-doc-auth', github: '18F/identity-doc-auth', tag: 'v0.2.0'
 
 group :test do
-  gem 'rspec'
-  gem 'webmock'
   gem 'pry-byebug'
+  gem 'rspec'
+  gem 'rubocop'
+  gem 'webmock'
 end

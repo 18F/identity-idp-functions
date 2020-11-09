@@ -11,13 +11,13 @@ RSpec.describe IdentityIdpFunctions::SsmHelper do
     it 'loads a secret from AWS' do
       Aws.config[:ssm] = {
         stub_responses: {
-          get_parameter: -> (context) {
+          get_parameter: lambda do |context|
             expect(context.params[:name]).to eq('/int/idp/doc-capture/aaa')
             expect(context.params[:with_decryption]).to eq(true)
 
-            { parameter: { value: 'bbb' }, }
-          }
-        }
+            { parameter: { value: 'bbb' } }
+          end,
+        },
       }
 
       expect(helper.load('aaa')).to eq('bbb')
