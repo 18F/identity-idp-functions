@@ -44,13 +44,17 @@ RSpec.describe IdentityIdpFunctions::ProofDocument do
 
     url = URI.join('https://example.com', '/AssureIDService/Document/Instance')
     stub_request(:post, url).to_return(body: '"this-is-a-test-instance-id"')
-    stub_request(:post,'https://example.com/AssureIDService/Document/this-is-a-test-instance-id/Image?light=0&side=0').to_return(body: '')
-    stub_request(:post, 'https://example.com/AssureIDService/Document/this-is-a-test-instance-id/Image?light=0&side=1').to_return(body: '')
-    stub_request(:get, 'https://example.com/AssureIDService/Document/this-is-a-test-instance-id').to_return(body: '{"Result":1}')
-    stub_request(:get, 'https://example.com/AssureIDService/Document/this-is-a-test-instance-id/Field/Image?key=Photo').to_return(body: '')
-    stub_request(:post, 'https://facial_match.example.com/api/v1/facematch').to_return(body:'{"IsMatch":true}')
-    stub_request(:post, 'https://liveness.example.com/api/v1/liveness').to_return(body:'{"LivenessResult":{"LivenessAssessment": "Live"}}')
-    stub_request(:post, 'https://example.login.gov/api/callbacks/proof-document/:token').to_return(body: '')
+    doc_url = 'https://example.com/AssureIDService/Document/this-is-a-test-instance-id'
+    stub_request(:post,"#{doc_url}/Image?light=0&side=0").to_return(body: '')
+    stub_request(:post, "#{doc_url}/Image?light=0&side=1").to_return(body: '')
+    stub_request(:get, doc_url).to_return(body: '{"Result":1}')
+    stub_request(:get, "#{doc_url}/Field/Image?key=Photo").to_return(body: '')
+    stub_request(:post, 'https://facial_match.example.com/api/v1/facematch').
+      to_return(body:'{"IsMatch":true}')
+    stub_request(:post, 'https://liveness.example.com/api/v1/liveness').
+      to_return(body:'{"LivenessResult":{"LivenessAssessment": "Live"}}')
+    stub_request(:post, 'https://example.login.gov/api/callbacks/proof-document/:token').
+      to_return(body: '')
 
 
     s3_client = Aws::S3::Client.new(stub_responses: true)
@@ -81,7 +85,7 @@ RSpec.describe IdentityIdpFunctions::ProofDocument do
         ) do |request|
           expect(JSON.parse(request.body, symbolize_names: true)).to eq(
             document_result: {
-              acuant_error:{ code:nil, message: nil}, billed: true, errors:{},
+              acuant_error: { code:nil, message: nil}, billed: true, errors: {},
               liveness_assessment: 'Live',
               liveness_score: nil,
               match_score: nil,
@@ -110,7 +114,7 @@ RSpec.describe IdentityIdpFunctions::ProofDocument do
 
         expect(yielded_result).to eq(
           document_result: {
-            acuant_error:{ code:nil, message: nil}, billed: true, errors:{},
+            acuant_error: { code:nil, message: nil}, billed: true, errors: {},
             liveness_score: nil,
             match_score: nil,
             raw_alerts: [],
