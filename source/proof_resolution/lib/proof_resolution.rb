@@ -4,8 +4,7 @@ require 'retries'
 require 'proofer'
 require 'aamva'
 require 'lexisnexis'
-require '/opt/ruby/lib/faraday_helper' if !defined?(IdentityIdpFunctions::FaradayHelper)
-require '/opt/ruby/lib/ssm_helper' if !defined?(IdentityIdpFunctions::SsmHelper)
+require '/opt/ruby/lib/function_helper' if !defined?(IdentityIdpFunctions::FunctionHelper)
 
 module IdentityIdpFunctions
   class ProofResolution
