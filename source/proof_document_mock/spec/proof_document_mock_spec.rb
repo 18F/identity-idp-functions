@@ -28,7 +28,7 @@ RSpec.describe IdentityIdpFunctions::ProofDocumentMock do
             'Content-Type' => 'application/json',
             'X-API-AUTH-TOKEN' => idp_api_auth_token,
           },
-      ) do |request|
+        ) do |request|
             expect(JSON.parse(request.body, symbolize_names: true)).to eq(
               document_result: {
                 exception: nil,
@@ -37,9 +37,9 @@ RSpec.describe IdentityIdpFunctions::ProofDocumentMock do
                 success: true,
                 timed_out: false,
                 context: { stages: [
-                  { document: 'DocumentMock' }
-                ]}
-              }
+                  { document: 'DocumentMock' },
+                ] },
+              },
             )
           end
     end
@@ -67,7 +67,7 @@ RSpec.describe IdentityIdpFunctions::ProofDocumentMock do
         yielded_result = nil
         IdentityIdpFunctions::ProofDocumentMock.handle(
           event: event,
-          context: nil
+          context: nil,
         ) do |result|
           yielded_result = result
         end
@@ -80,9 +80,9 @@ RSpec.describe IdentityIdpFunctions::ProofDocumentMock do
             success: true,
             timed_out: false,
             context: { stages: [
-              { document: 'DocumentMock' }
-            ]}
-          }
+              { document: 'DocumentMock' },
+            ] },
+          },
         )
 
         expect(a_request(:post, callback_url)).to_not have_been_made
@@ -165,7 +165,8 @@ RSpec.describe IdentityIdpFunctions::ProofDocumentMock do
       end
 
       it 'loads secrets from SSM' do
-        expect(function.ssm_helper).to receive(:load).with('document_proof_result_token').and_return(idp_api_auth_token)
+        expect(function.ssm_helper).to receive(:load).with('document_proof_result_token').
+          and_return(idp_api_auth_token)
 
         function.proof
 

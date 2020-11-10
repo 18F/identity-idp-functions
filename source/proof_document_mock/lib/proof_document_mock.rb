@@ -44,21 +44,21 @@ module IdentityIdpFunctions
     def proof(&callback_block)
       proofer_result = with_retries(**faraday_retry_options) do
         mock_proofer.proof(
-            encryption_key: encryption_key,
-            front_image_iv: front_image_iv,
-            back_image_iv: back_image_iv,
-            selfie_image_iv: selfie_image_iv,
-            front_image_url: front_image_url,
-            back_image_url: back_image_url,
-            selfie_image_url: selfie_image_url,
-            liveness_checking_enabled: liveness_checking_enabled,
-            callback_url: callback_url,
+          encryption_key: encryption_key,
+          front_image_iv: front_image_iv,
+          back_image_iv: back_image_iv,
+          selfie_image_iv: selfie_image_iv,
+          front_image_url: front_image_url,
+          back_image_url: back_image_url,
+          selfie_image_url: selfie_image_url,
+          liveness_checking_enabled: liveness_checking_enabled,
+          callback_url: callback_url,
         )
       end
 
       result = proofer_result.to_h
       result[:context] = { stages: [
-        document: IdentityIdpFunctions::DocumentMockClient.vendor_name
+        document: IdentityIdpFunctions::DocumentMockClient.vendor_name,
       ] }
 
       result[:exception] = proofer_result.exception.inspect if proofer_result.exception
@@ -81,7 +81,7 @@ module IdentityIdpFunctions
           callback_body.to_json,
           'X-API-AUTH-TOKEN' => api_auth_token,
           'Content-Type' => 'application/json',
-          'Accept' => 'application/json'
+          'Accept' => 'application/json',
         )
       end
     end

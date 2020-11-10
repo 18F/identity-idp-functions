@@ -57,10 +57,11 @@ RSpec.describe IdentityIdpFunctions::ProofDocument do
       to_return(body: '')
 
     s3_client = Aws::S3::Client.new(stub_responses: true)
-    s3_client.stub_responses(:get_object, { body: "\xDE\x9E[\xF8\xB8\xABZ\xD2E\xA8\xC5`'\x18\xAF\xC7" })
+    s3_client.stub_responses(:get_object,
+                             { body: "\xDE\x9E[\xF8\xB8\xABZ\xD2E\xA8\xC5`'\x18\xAF\xC7" })
     allow(Aws::S3::Client).to receive(:new).and_return(s3_client)
-    allow_any_instance_of(IdentityDocAuth::Acuant::Responses::GetResultsResponse).to receive(:pii_from_doc).
-      and_return(applicant_pii)
+    allow_any_instance_of(IdentityDocAuth::Acuant::Responses::GetResultsResponse).
+      to receive(:pii_from_doc).and_return(applicant_pii)
   end
 
   describe '.handle' do
@@ -72,8 +73,8 @@ RSpec.describe IdentityIdpFunctions::ProofDocument do
         body: {
           'Status' => {
             'TransactionStatus' => 'passed',
-          }
-        }.to_json
+          },
+        }.to_json,
       )
 
       stub_request(:post, callback_url).
@@ -85,7 +86,7 @@ RSpec.describe IdentityIdpFunctions::ProofDocument do
         ) do |request|
           expect(JSON.parse(request.body, symbolize_names: true)).to eq(
             document_result: {
-              acuant_error: { code: nil, message: nil}, billed: true, errors: {},
+              acuant_error: { code: nil, message: nil }, billed: true, errors: {},
               liveness_assessment: 'Live',
               liveness_score: nil,
               match_score: nil,
@@ -93,7 +94,7 @@ RSpec.describe IdentityIdpFunctions::ProofDocument do
               result: 'Passed',
               success: true,
               exception: nil,
-            }
+            },
           )
         end
     end
