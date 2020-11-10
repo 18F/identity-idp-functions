@@ -147,8 +147,6 @@ RSpec.describe IdentityIdpFunctions::ProofAddressMock do
     end
 
     context 'when IDP auth token is blank' do
-      let(:idp_api_auth_token) { nil }
-
       it_behaves_like 'misconfigured proofer'
     end
 
