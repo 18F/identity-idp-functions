@@ -29,18 +29,18 @@ RSpec.describe IdentityIdpFunctions::ProofDocumentMock do
             'X-API-AUTH-TOKEN' => idp_api_auth_token,
           },
         ) do |request|
-          expect(JSON.parse(request.body, symbolize_names: true)).to eq(
-            document_result: {
-              exception: nil,
-              errors: {},
-              messages: [],
-              success: true,
-              timed_out: false,
-              context: { stages: [
-                { document: 'DocumentMock' },
-              ] },
-            },
-          )
+        expect(JSON.parse(request.body, symbolize_names: true)).to eq(
+          document_result: {
+            exception: nil,
+            errors: {},
+            messages: [],
+            success: true,
+            timed_out: false,
+            context: { stages: [
+              { document: 'DocumentMock' },
+            ] },
+          },
+        )
       end
     end
 
