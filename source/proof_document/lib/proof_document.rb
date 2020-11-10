@@ -11,7 +11,7 @@ module IdentityIdpFunctions
   class ProofDocument
     include IdentityIdpFunctions::FaradayHelper
 
-    def self.handle(event:, context:, &callback_block)
+    def self.handle(event:, _context:, &callback_block)
       params = JSON.parse(event.to_json, symbolize_names: true)
       new(**params).proof(&callback_block)
     end
@@ -40,7 +40,7 @@ module IdentityIdpFunctions
       @callback_url = callback_url
     end
 
-    def proof(&callback_block)
+    def proof(&_callback_block)
       set_up_env!
 
       proofer_result = with_retries(**faraday_retry_options) do

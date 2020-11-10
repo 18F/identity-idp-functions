@@ -108,7 +108,7 @@ RSpec.describe IdentityIdpFunctions::ProofDocument do
         yielded_result = nil
         IdentityIdpFunctions::ProofDocument.handle(
           event: event,
-          context: nil
+          context: nil,
         ) do |result|
           yielded_result = result
         end
@@ -122,7 +122,7 @@ RSpec.describe IdentityIdpFunctions::ProofDocument do
             result: 'Passed',
             success: true,
             liveness_assessment: 'Live',
-            exception: nil,
+            exception: nil
           },
         )
 
