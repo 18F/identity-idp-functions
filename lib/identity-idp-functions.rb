@@ -23,4 +23,4 @@ end
 
 require IdentityIdpFunctions.helper_path('ssm_helper')
 require IdentityIdpFunctions.helper_path('faraday_helper')
-require IdentityIdpFunctions.helper_path('error_helper')
+require IdentityIdpFunctions.helper_path('errors')
