@@ -5,7 +5,7 @@ require 'retries'
 require '/opt/ruby/lib/faraday_helper' if !defined?(IdentityIdpFunctions::FaradayHelper)
 require '/opt/ruby/lib/ssm_helper' if !defined?(IdentityIdpFunctions::SsmHelper)
 require 'openssl'
-require "aws-sdk-s3"
+require 'aws-sdk-s3'
 
 module IdentityIdpFunctions
   class ProofDocument
@@ -73,15 +73,15 @@ module IdentityIdpFunctions
         build_faraday.post(
           callback_url,
           callback_body.to_json,
-          "X-API-AUTH-TOKEN" => api_auth_token,
-          "Content-Type" => 'application/json',
-          "Accept" => 'application/json'
+          'X-API-AUTH-TOKEN' => api_auth_token,
+          'Content-Type' => 'application/json',
+          'Accept' => 'application/json'
         )
       end
     end
 
     def api_auth_token
-      @api_auth_token ||= ENV.fetch("IDP_API_AUTH_TOKEN") do
+      @api_auth_token ||= ENV.fetch('IDP_API_AUTH_TOKEN') do
         ssm_helper.load('document_proof_result_token')
       end
     end
