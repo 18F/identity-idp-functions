@@ -41,7 +41,7 @@ RSpec.describe IdentityIdpFunctions::ProofDocumentMock do
                 ] },
               },
             )
-          end
+      end
     end
 
     let(:event) do

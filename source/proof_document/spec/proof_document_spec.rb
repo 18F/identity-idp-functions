@@ -93,7 +93,7 @@ RSpec.describe IdentityIdpFunctions::ProofDocument do
               raw_alerts: [],
               result: 'Passed',
               success: true,
-              exception: nil,
+              exception: nil
             },
           )
         end
@@ -115,7 +115,7 @@ RSpec.describe IdentityIdpFunctions::ProofDocument do
 
         expect(yielded_result).to eq(
           document_result: {
-            acuant_error: { code: nil, message: nil}, billed: true, errors: {},
+            acuant_error: { code: nil, message: nil }, billed: true, errors: {},
             liveness_score: nil,
             match_score: nil,
             raw_alerts: [],
@@ -123,7 +123,7 @@ RSpec.describe IdentityIdpFunctions::ProofDocument do
             success: true,
             liveness_assessment: 'Live',
             exception: nil,
-          }
+          },
         )
 
         expect(a_request(:post, callback_url)).to_not have_been_made
