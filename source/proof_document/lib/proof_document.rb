@@ -75,7 +75,7 @@ module IdentityIdpFunctions
           callback_body.to_json,
           'X-API-AUTH-TOKEN' => api_auth_token,
           'Content-Type' => 'application/json',
-          'Accept' => 'application/json'
+          'Accept' => 'application/json',
         )
       end
     end
@@ -132,13 +132,13 @@ module IdentityIdpFunctions
 
     def fetch_file(url)
       uri = URI.parse(url)
-      document_bucket = uri.host.gsub('.amazonaws.com','')
+      document_bucket = uri.host.gsub('.amazonaws.com', '')
       resp = s3_client.get_object(bucket: document_bucket, key: uri.path[1..-1])
       resp.body.read
     end
 
     def decrypt(encrypted_image, iv)
-      cipher = OpenSSL::Cipher::AES.new(256, :CBC)
+      cipher = OpenSSL::Cipher.new('aes-256-cbc')
       cipher.decrypt
       cipher.iv = iv
       cipher.key = encryption_key

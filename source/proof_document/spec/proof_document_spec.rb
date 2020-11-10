@@ -45,29 +45,29 @@ RSpec.describe IdentityIdpFunctions::ProofDocument do
     url = URI.join('https://example.com', '/AssureIDService/Document/Instance')
     stub_request(:post, url).to_return(body: '"this-is-a-test-instance-id"')
     doc_url = 'https://example.com/AssureIDService/Document/this-is-a-test-instance-id'
-    stub_request(:post,"#{doc_url}/Image?light=0&side=0").to_return(body: '')
+    stub_request(:post, "#{doc_url}/Image?light=0&side=0").to_return(body: '')
     stub_request(:post, "#{doc_url}/Image?light=0&side=1").to_return(body: '')
     stub_request(:get, doc_url).to_return(body: '{"Result":1}')
     stub_request(:get, "#{doc_url}/Field/Image?key=Photo").to_return(body: '')
     stub_request(:post, 'https://facial_match.example.com/api/v1/facematch').
-      to_return(body:'{"IsMatch":true}')
+      to_return(body: '{"IsMatch":true}')
     stub_request(:post, 'https://liveness.example.com/api/v1/liveness').
-      to_return(body:'{"LivenessResult":{"LivenessAssessment": "Live"}}')
+      to_return(body: '{"LivenessResult":{"LivenessAssessment": "Live"}}')
     stub_request(:post, 'https://example.login.gov/api/callbacks/proof-document/:token').
       to_return(body: '')
-
 
     s3_client = Aws::S3::Client.new(stub_responses: true)
     s3_client.stub_responses(:get_object, { body: "\xDE\x9E[\xF8\xB8\xABZ\xD2E\xA8\xC5`'\x18\xAF\xC7" })
     allow(Aws::S3::Client).to receive(:new).and_return(s3_client)
-    allow_any_instance_of(IdentityDocAuth::Acuant::Responses::GetResultsResponse).to receive(:pii_from_doc).and_return(applicant_pii)
+    allow_any_instance_of(IdentityDocAuth::Acuant::Responses::GetResultsResponse).to receive(:pii_from_doc).
+      and_return(applicant_pii)
   end
 
   describe '.handle' do
     before do
       stub_request(
         :post,
-        'https://lexisnexis.example.com/restws/identity/v2/abc123/aaa/conversation'
+        'https://lexisnexis.example.com/restws/identity/v2/abc123/aaa/conversation',
       ).to_return(
         body: {
           'Status' => {
