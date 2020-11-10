@@ -6,6 +6,12 @@ require 'identity-idp-functions/version'
 module IdentityIdpFunctions
   module_function
 
+  class MisconfiguredLambdaError < StandardError
+    def message
+      'IDP_API_AUTH_TOKEN is not configured'
+    end
+  end
+
   # Helper for building a ruby require path for
   # "source/$function_name/lib/$function_name.rb"
   def function_path(function_name)
