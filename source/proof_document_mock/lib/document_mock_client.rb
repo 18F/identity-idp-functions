@@ -10,9 +10,9 @@ module IdentityIdpFunctions
 
     stage :document
 
-    UNVERIFIABLE_PHONE_NUMBER = '7035555555'
-    PROOFER_TIMEOUT_PHONE_NUMBER = '7035555888'
-    FAILED_TO_CONTACT_PHONE_NUMBER = '7035555999'
+    UNVERIFIABLE_PHONE_NUMBER = '7035555555'.freeze
+    PROOFER_TIMEOUT_PHONE_NUMBER = '7035555888'.freeze
+    FAILED_TO_CONTACT_PHONE_NUMBER = '7035555999'.freeze
 
     proof do |applicant, result|
       plain_phone = applicant[:phone].gsub(/\D/, '').gsub(/\A1/, '')

@@ -85,7 +85,7 @@ RSpec.describe IdentityIdpFunctions::ProofDocument do
         ) do |request|
           expect(JSON.parse(request.body, symbolize_names: true)).to eq(
             document_result: {
-              acuant_error: { code:nil, message: nil}, billed: true, errors: {},
+              acuant_error: { code: nil, message: nil}, billed: true, errors: {},
               liveness_assessment: 'Live',
               liveness_score: nil,
               match_score: nil,
@@ -114,7 +114,7 @@ RSpec.describe IdentityIdpFunctions::ProofDocument do
 
         expect(yielded_result).to eq(
           document_result: {
-            acuant_error: { code:nil, message: nil}, billed: true, errors: {},
+            acuant_error: { code: nil, message: nil}, billed: true, errors: {},
             liveness_score: nil,
             match_score: nil,
             raw_alerts: [],
@@ -212,13 +212,20 @@ RSpec.describe IdentityIdpFunctions::ProofDocument do
       end
 
       it 'loads secrets from SSM and puts them in the ENV' do
-        expect(function.ssm_helper).to receive(:load).with('document_proof_result_token').and_return(idp_api_auth_token)
-        expect(function.ssm_helper).to receive(:load).with('acuant_assure_id_password').and_return('aaa')
-        expect(function.ssm_helper).to receive(:load).with('acuant_assure_id_subscription_id').and_return('aaa')
-        expect(function.ssm_helper).to receive(:load).with('acuant_assure_id_url').and_return('https://example.com')
-        expect(function.ssm_helper).to receive(:load).with('acuant_assure_id_username').and_return('aaa')
-        expect(function.ssm_helper).to receive(:load).with('acuant_facial_match_url').and_return('https://facial_match.example.com')
-        expect(function.ssm_helper).to receive(:load).with('acuant_passlive_url').and_return('https://liveness.example.com')
+        expect(function.ssm_helper).to receive(:load).with('document_proof_result_token').
+          and_return(idp_api_auth_token)
+        expect(function.ssm_helper).to receive(:load).with('acuant_assure_id_password').
+          and_return('aaa')
+        expect(function.ssm_helper).to receive(:load).with('acuant_assure_id_subscription_id').
+          and_return('aaa')
+        expect(function.ssm_helper).to receive(:load).with('acuant_assure_id_url').
+          and_return('https://example.com')
+        expect(function.ssm_helper).to receive(:load).with('acuant_assure_id_username').
+          and_return('aaa')
+        expect(function.ssm_helper).to receive(:load).with('acuant_facial_match_url').
+          and_return('https://facial_match.example.com')
+        expect(function.ssm_helper).to receive(:load).with('acuant_passlive_url').
+          and_return('https://liveness.example.com')
         expect(function.ssm_helper).to receive(:load).with('acuant_timeout').and_return(60)
 
         function.proof
