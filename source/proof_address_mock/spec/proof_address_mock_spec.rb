@@ -1,5 +1,6 @@
 require 'securerandom'
 require 'identity-idp-functions/proof_address_mock'
+require 'shared_examples_for_proofers'
 
 RSpec.describe IdentityIdpFunctions::ProofAddressMock do
   let(:idp_api_auth_token) { SecureRandom.hex }
@@ -143,6 +144,10 @@ RSpec.describe IdentityIdpFunctions::ProofAddressMock do
 
         expect(a_request(:post, callback_url)).to have_been_made.times(3)
       end
+    end
+
+    context 'when IDP auth token is blank' do
+      it_behaves_like 'misconfigured proofer'
     end
 
     context 'when there are no params in the ENV' do

@@ -1,5 +1,6 @@
 require 'securerandom'
 require 'identity-idp-functions/proof_resolution'
+require 'shared_examples_for_proofers'
 
 RSpec.describe IdentityIdpFunctions::ProofResolution do
   let(:idp_api_auth_token) { SecureRandom.hex }
@@ -208,6 +209,10 @@ RSpec.describe IdentityIdpFunctions::ProofResolution do
 
         expect(WebMock).to have_requested(:post, callback_url)
       end
+    end
+
+    context 'when IDP auth token is blank' do
+      it_behaves_like 'misconfigured proofer'
     end
 
     context 'when there are no params in the ENV' do
