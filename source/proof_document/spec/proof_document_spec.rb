@@ -146,7 +146,7 @@ RSpec.describe IdentityIdpFunctions::ProofDocument do
     context 'with a successful response from the proofer' do
       before do
         expect(document_proofer).to receive(:post_images).
-          and_return(Proofer::Result.new)
+          and_return(IdentityDocAuth::Response.new(success: true))
       end
 
       it 'posts back to the callback url' do
@@ -159,7 +159,7 @@ RSpec.describe IdentityIdpFunctions::ProofDocument do
     context 'with an unsuccessful response from the proofer' do
       before do
         expect(document_proofer).to receive(:post_images).
-          and_return(Proofer::Result.new(exception: RuntimeError.new))
+          and_return(IdentityDocAuth::Response.new(success: false, exception: RuntimeError.new))
       end
 
       it 'posts back to the callback url' do
@@ -187,7 +187,7 @@ RSpec.describe IdentityIdpFunctions::ProofDocument do
     context 'with a connection error posting to the callback url' do
       before do
         expect(document_proofer).to receive(:post_images).
-          and_return(Proofer::Result.new)
+          and_return(IdentityDocAuth::Response.new(success: false))
 
         stub_request(:post, callback_url).
           to_timeout.
