@@ -41,8 +41,6 @@ module IdentityIdpFunctions
     end
 
     def proof(&callback_block) # rubocop:disable Lint/UnusedMethodArgument
-      set_up_env!
-
       proofer_result = with_retries(**faraday_retry_options) do
         document_proofer.post_images(
           front_image: decrypt_from_s3(front_image_url, front_image_iv),
@@ -86,29 +84,15 @@ module IdentityIdpFunctions
       end
     end
 
-    def set_up_env!
-      %w[
-        acuant_assure_id_password
-        acuant_assure_id_subscription_id
-        acuant_assure_id_url
-        acuant_assure_id_username
-        acuant_facial_match_url
-        acuant_passlive_url
-        acuant_timeout
-      ].each do |env_key|
-        ENV[env_key] ||= ssm_helper.load(env_key)
-      end
-    end
-
     def document_proofer
       IdentityDocAuth::Acuant::AcuantClient.new(
-        assure_id_password: ENV['acuant_assure_id_password'],
-        assure_id_subscription_id: ENV['acuant_assure_id_subscription_id'],
-        assure_id_url: ENV['acuant_assure_id_url'],
-        assure_id_username: ENV['acuant_assure_id_username'],
-        facial_match_url: ENV['acuant_facial_match_url'],
-        passlive_url: ENV['acuant_passlive_url'],
-        timeout: ENV['acuant_timeout'],
+        assure_id_password: ssm_helper.load('acuant_assure_id_password'),
+        assure_id_subscription_id: ssm_helper.load('acuant_assure_id_subscription_id'),
+        assure_id_url: ssm_helper.load('acuant_assure_id_url'),
+        assure_id_username: ssm_helper.load('acuant_assure_id_username'),
+        facial_match_url: ssm_helper.load('acuant_facial_match_url'),
+        passlive_url: ssm_helper.load('acuant_passlive_url'),
+        timeout: ssm_helper.load('acuant_timeout'),
       )
     end
 

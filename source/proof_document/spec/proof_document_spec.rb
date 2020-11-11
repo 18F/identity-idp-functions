@@ -30,17 +30,15 @@ RSpec.describe IdentityIdpFunctions::ProofDocument do
   end
 
   before do
-    stub_const(
-      'ENV',
-      'IDP_API_AUTH_TOKEN' => idp_api_auth_token,
-      'acuant_assure_id_password' => 'aaa',
-      'acuant_assure_id_subscription_id' => 'aaa',
-      'acuant_assure_id_url' => 'https://example.com',
-      'acuant_assure_id_username' => 'aaa',
-      'acuant_facial_match_url' => 'https://facial_match.example.com',
-      'acuant_passlive_url' => 'https://liveness.example.com',
-      'acuant_timeout' => 60,
-    )
+    mock_ssm_helper('IDP_API_AUTH_TOKEN', idp_api_auth_token)
+    mock_ssm_helper('acuant_assure_id_password', 'aaa')
+    mock_ssm_helper('acuant_assure_id_subscription_id', 'aaa')
+    mock_ssm_helper('acuant_assure_id_url', 'https://example.com')
+    mock_ssm_helper('acuant_assure_id_username', 'aaa')
+    mock_ssm_helper('acuant_facial_match_url', 'https://facial_match.example.com')
+    mock_ssm_helper('acuant_passlive_url', 'https://liveness.example.com')
+    mock_ssm_helper('acuant_timeout', 60)
+    mock_ssm_helper('document_proof_result_token', idp_api_auth_token)
 
     url = URI.join('https://example.com', '/AssureIDService/Document/Instance')
     stub_request(:post, url).to_return(body: '"this-is-a-test-instance-id"')
@@ -203,45 +201,10 @@ RSpec.describe IdentityIdpFunctions::ProofDocument do
         expect(a_request(:post, callback_url)).to have_been_made.times(3)
       end
     end
+  end
 
-    context 'when there are no params in the ENV' do
-      before do
-        ENV.clear
-
-        expect(document_proofer).to receive(:post_images).
-          and_return(Proofer::Result.new)
-      end
-
-      it 'loads secrets from SSM and puts them in the ENV' do
-        expect(function.ssm_helper).to receive(:load).with('document_proof_result_token').
-          and_return(idp_api_auth_token)
-        expect(function.ssm_helper).to receive(:load).with('acuant_assure_id_password').
-          and_return('aaa')
-        expect(function.ssm_helper).to receive(:load).with('acuant_assure_id_subscription_id').
-          and_return('aaa')
-        expect(function.ssm_helper).to receive(:load).with('acuant_assure_id_url').
-          and_return('https://example.com')
-        expect(function.ssm_helper).to receive(:load).with('acuant_assure_id_username').
-          and_return('aaa')
-        expect(function.ssm_helper).to receive(:load).with('acuant_facial_match_url').
-          and_return('https://facial_match.example.com')
-        expect(function.ssm_helper).to receive(:load).with('acuant_passlive_url').
-          and_return('https://liveness.example.com')
-        expect(function.ssm_helper).to receive(:load).with('acuant_timeout').and_return(60)
-
-        function.proof
-
-        expect(WebMock).to have_requested(:post, callback_url)
-
-        expect(ENV).to include(
-          'acuant_assure_id_password' => 'aaa',
-          'acuant_assure_id_subscription_id' => 'aaa',
-          'acuant_assure_id_url' => 'https://example.com',
-          'acuant_assure_id_username' => 'aaa',
-          'acuant_facial_match_url' => 'https://facial_match.example.com',
-          'acuant_passlive_url' => 'https://liveness.example.com',
-        )
-      end
-    end
+  def mock_ssm_helper(key, value)
+    allow_any_instance_of(IdentityIdpFunctions::SsmHelper).to receive(:load).with(key).
+      and_return(value)
   end
 end
