@@ -144,7 +144,7 @@ RSpec.describe IdentityIdpFunctions::ProofResolution do
 
         expect(aamva_proofer).to receive(:proof).
           and_return(Proofer::Result.new)
-        end
+      end
 
       it 'posts back to the callback url' do
         function.proof
