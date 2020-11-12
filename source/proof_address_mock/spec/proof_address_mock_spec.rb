@@ -131,20 +131,7 @@ RSpec.describe IdentityIdpFunctions::ProofAddressMock do
       end
     end
 
-    context 'with a connection error posting to the callback url' do
-      before do
-        stub_request(:post, callback_url).
-          to_timeout.
-          to_timeout.
-          to_timeout
-      end
-
-      it 'retries 3 then errors' do
-        expect { function.proof }.to raise_error(Faraday::ConnectionFailed)
-
-        expect(a_request(:post, callback_url)).to have_been_made.times(3)
-      end
-    end
+    it_behaves_like 'callback url behavior'
 
     context 'when IDP auth token is blank' do
       it_behaves_like 'misconfigured proofer'
