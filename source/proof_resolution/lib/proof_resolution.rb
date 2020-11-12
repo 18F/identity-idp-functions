@@ -26,7 +26,7 @@ module IdentityIdpFunctions
     def proof
       set_up_env!
 
-      raise Errors::MisconfiguredLambdaError unless block_given? || api_auth_token.present?
+      raise Errors::MisconfiguredLambdaError if !block_given? && api_auth_token.to_s.empty?
 
       proofer_result = with_retries(**faraday_retry_options) do
         lexisnexis_proofer.proof(applicant_pii)

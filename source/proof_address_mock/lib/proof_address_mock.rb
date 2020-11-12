@@ -22,7 +22,7 @@ module IdentityIdpFunctions
     end
 
     def proof
-      raise Errors::MisconfiguredLambdaError unless block_given? || api_auth_token.present?
+      raise Errors::MisconfiguredLambdaError if !block_given? && api_auth_token.to_s.empty?
 
       proofer_result = with_retries(**faraday_retry_options) do
         mock_proofer.proof(applicant_pii)
