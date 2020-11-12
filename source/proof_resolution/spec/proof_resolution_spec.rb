@@ -138,17 +138,21 @@ RSpec.describe IdentityIdpFunctions::ProofResolution do
     end
 
     context 'with a successful response from the proofer' do
-      it 'posts back to the callback url' do
+      before do
         expect(lexisnexis_proofer).to receive(:proof).
           and_return(Proofer::Result.new)
 
         expect(aamva_proofer).to receive(:proof).
           and_return(Proofer::Result.new)
+      end
 
+      it 'posts back to the callback url' do
         function.proof
 
         expect(WebMock).to have_requested(:post, callback_url)
       end
+
+      it_behaves_like 'callback url behavior'
     end
 
     context 'does not call state id with an unsuccessful response from the proofer' do
@@ -173,27 +177,6 @@ RSpec.describe IdentityIdpFunctions::ProofResolution do
 
       it 'retries 3 times then errors' do
         expect(WebMock).to_not have_requested(:post, callback_url)
-      end
-    end
-
-    context 'with a connection error posting to the callback url' do
-      before do
-        expect(lexisnexis_proofer).to receive(:proof).
-          and_return(Proofer::Result.new)
-
-        expect(aamva_proofer).to receive(:proof).
-          and_return(Proofer::Result.new)
-
-        stub_request(:post, callback_url).
-          to_timeout.
-          to_timeout.
-          to_timeout
-      end
-
-      it 'retries 3 then errors' do
-        expect { function.proof }.to raise_error(Faraday::ConnectionFailed)
-
-        expect(a_request(:post, callback_url)).to have_been_made.times(3)
       end
     end
 

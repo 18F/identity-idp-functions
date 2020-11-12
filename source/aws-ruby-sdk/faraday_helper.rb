@@ -9,6 +9,9 @@ module IdentityIdpFunctions
         conn.options.read_timeout = 3
         conn.options.open_timeout = 3
         conn.options.write_timeout = 3
+
+        # raises errors on 4XX or 5XX responses
+        conn.response :raise_error
       end
     end
 
