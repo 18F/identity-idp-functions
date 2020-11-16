@@ -86,8 +86,9 @@ Resources:
             - s3:GetObject
             - s3:DeleteObject
             Resource: !Sub
-              - arn:aws:s3:::login-gov-idp-doc-capture-${Environment}.${AccountId}-${Region}/*
+              - arn:${Partition}:s3:::login-gov-idp-doc-capture-${Environment}.${AccountId}-${Region}/*
               - Environment: !Ref environment
+                Partition: !Ref AWS::Partition
                 AccountId: !Ref AWS::AccountId
                 Region: !Ref AWS::Region
         - Statement:
@@ -96,8 +97,9 @@ Resources:
             Action:
             - s3:ListBucket
             Resource: !Sub
-              - arn:aws:s3:::login-gov-idp-doc-capture-${Environment}.${AccountId}-${Region}
+              - arn:${Partition}:s3:::login-gov-idp-doc-capture-${Environment}.${AccountId}-${Region}
               - Environment: !Ref environment
+                Partition: !Ref AWS::Partition
                 AccountId: !Ref AWS::AccountId
                 Region: !Ref AWS::Region
         - Statement:
@@ -233,8 +235,9 @@ Resources:
             - s3:GetObject
             - s3:DeleteObject
             Resource: !Sub
-              - arn:aws:s3:::login-gov-idp-doc-capture-${Environment}.${AccountId}-${Region}/*
+              - arn:${Partition}:s3:::login-gov-idp-doc-capture-${Environment}.${AccountId}-${Region}/*
               - Environment: !Ref environment
+                Partition: !Ref AWS::Partition
                 AccountId: !Ref AWS::AccountId
                 Region: !Ref AWS::Region
         - Statement:
@@ -243,8 +246,9 @@ Resources:
             Action:
             - s3:ListBucket
             Resource: !Sub
-              - arn:aws:s3:::login-gov-idp-doc-capture-${Environment}.${AccountId}-${Region}
+              - arn:${Partition}:s3:::login-gov-idp-doc-capture-${Environment}.${AccountId}-${Region}
               - Environment: !Ref environment
+                Partition: !Ref AWS::Partition
                 AccountId: !Ref AWS::AccountId
                 Region: !Ref AWS::Region
         - Statement:
@@ -283,7 +287,7 @@ Resources:
               - "*"
       VpcConfig:
         SecurityGroupIds:
-          - !GetAtt ProofAddressMockSecurityGroup.GroupId
+          - !GetAtt ProofAddressSecurityGroup.GroupId
         SubnetIds:
           - !Sub
               - '{{resolve:ssm:/${Environment}/network/subnet/private1/id:1}}'
@@ -305,23 +309,6 @@ Resources:
         - /${Environment}/idp/lambda/ProofAddressMock/arn
         - Environment: !Ref environment
       Value: !GetAtt ProofAddressMockFunction.Arn
-
-  ProofAddressMockSecurityGroup:
-    Type: AWS::EC2::SecurityGroup
-    Properties:
-      VpcId: !Sub
-        - '{{resolve:ssm:/${Environment}/network/vpc/id:1}}'
-        - Environment: !Ref environment
-      GroupDescription: Proof Address Mock Lambda Function
-      SecurityGroupEgress:
-        - IpProtocol: tcp
-          FromPort: 443
-          ToPort: 443
-          CidrIp: 0.0.0.0/0
-        - IpProtocol: tcp
-          FromPort: 3128
-          ToPort: 3128
-          CidrIp: 172.16.32.0/22
 
   ProofResolutionFunction:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
@@ -357,8 +344,9 @@ Resources:
             - s3:GetObject
             - s3:DeleteObject
             Resource: !Sub
-              - arn:aws:s3:::login-gov-idp-doc-capture-${Environment}.${AccountId}-${Region}/*
+              - arn:${Partition}:s3:::login-gov-idp-doc-capture-${Environment}.${AccountId}-${Region}/*
               - Environment: !Ref environment
+                Partition: !Ref AWS::Partition
                 AccountId: !Ref AWS::AccountId
                 Region: !Ref AWS::Region
         - Statement:
@@ -367,8 +355,9 @@ Resources:
             Action:
             - s3:ListBucket
             Resource: !Sub
-              - arn:aws:s3:::login-gov-idp-doc-capture-${Environment}.${AccountId}-${Region}
+              - arn:${Partition}:s3:::login-gov-idp-doc-capture-${Environment}.${AccountId}-${Region}
               - Environment: !Ref environment
+                Partition: !Ref AWS::Partition
                 AccountId: !Ref AWS::AccountId
                 Region: !Ref AWS::Region
         - Statement:
@@ -481,8 +470,9 @@ Resources:
             - s3:GetObject
             - s3:DeleteObject
             Resource: !Sub
-              - arn:aws:s3:::login-gov-idp-doc-capture-${Environment}.${AccountId}-${Region}/*
+              - arn:${Partition}:s3:::login-gov-idp-doc-capture-${Environment}.${AccountId}-${Region}/*
               - Environment: !Ref environment
+                Partition: !Ref AWS::Partition
                 AccountId: !Ref AWS::AccountId
                 Region: !Ref AWS::Region
         - Statement:
@@ -491,8 +481,9 @@ Resources:
             Action:
             - s3:ListBucket
             Resource: !Sub
-              - arn:aws:s3:::login-gov-idp-doc-capture-${Environment}.${AccountId}-${Region}
+              - arn:${Partition}:s3:::login-gov-idp-doc-capture-${Environment}.${AccountId}-${Region}
               - Environment: !Ref environment
+                Partition: !Ref AWS::Partition
                 AccountId: !Ref AWS::AccountId
                 Region: !Ref AWS::Region
         - Statement:
@@ -531,7 +522,7 @@ Resources:
               - "*"
       VpcConfig:
         SecurityGroupIds:
-          - !GetAtt ProofResolutionMockSecurityGroup.GroupId
+          - !GetAtt ProofResolutionSecurityGroup.GroupId
         SubnetIds:
           - !Sub
               - '{{resolve:ssm:/${Environment}/network/subnet/private1/id:1}}'
@@ -554,23 +545,6 @@ Resources:
         - Environment: !Ref environment
       Value: !GetAtt ProofResolutionMockFunction.Arn
 
-  ProofResolutionMockSecurityGroup:
-    Type: AWS::EC2::SecurityGroup
-    Properties:
-      VpcId: !Sub
-        - '{{resolve:ssm:/${Environment}/network/vpc/id:1}}'
-        - Environment: !Ref environment
-      GroupDescription: Proof Resolution Mock Lambda Function
-      SecurityGroupEgress:
-        - IpProtocol: tcp
-          FromPort: 443
-          ToPort: 443
-          CidrIp: 0.0.0.0/0
-        - IpProtocol: tcp
-          FromPort: 3128
-          ToPort: 3128
-          CidrIp: 172.16.32.0/22
-
   AWSRubySDKLayer:
     Type: "AWS::Serverless::LayerVersion"
     Properties:
@@ -584,6 +558,87 @@ Resources:
       RetentionPolicy: Retain
     Metadata:
       BuildMethod: ruby2.7
+
+  # update with ssm parameter
+  ProofResolutionAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmActions:
+        - !Sub
+          - arn:${Partition}:sns:${Region}:${AccountId}:slack-otherevents
+          - Partition: !Ref AWS::Partition
+            AccountId: !Ref AWS::AccountId
+            Region: !Ref AWS::Region
+      ComparisonOperator: GreatherThanOrEqualToThreshold
+      Dimensions: 
+        - Name: FunctionName
+          Value: !Ref ProofResolutionFunction
+      EvaluationPeriods: 1
+      MetricName: Errors
+      Namespace: AWS/Lambda
+      Period: 60
+      Statistic: Sum
+      Threshold: 1
+
+    ProofResolutionMockAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmActions:
+        - !Sub
+          - arn:${Partition}:sns:${Region}:${AccountId}:slack-otherevents
+          - Partition: !Ref AWS::Partition
+            AccountId: !Ref AWS::AccountId
+            Region: !Ref AWS::Region
+      ComparisonOperator: GreatherThanOrEqualToThreshold
+      Dimensions: 
+        - Name: FunctionName
+          Value: !Ref ProofResolutionMockFunction
+      EvaluationPeriods: 1
+      MetricName: Errors
+      Namespace: AWS/Lambda
+      Period: 60
+      Statistic: Sum
+      Threshold: 1
+
+  ProofAddressAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmActions:
+        - !Sub
+          - arn:${Partition}:sns:${Region}:${AccountId}:slack-otherevents
+          - Partition: !Ref AWS::Partition
+            AccountId: !Ref AWS::AccountId
+            Region: !Ref AWS::Region
+      ComparisonOperator: GreatherThanOrEqualToThreshold
+      Dimensions: 
+        - Name: FunctionName
+          Value: !Ref ProofAddressFunction
+      EvaluationPeriods: 1
+      MetricName: Errors
+      Namespace: AWS/Lambda
+      Period: 60
+      Statistic: Sum
+      Threshold: 1
+
+    ProofAddressMockAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmActions:
+        - !Sub
+          - arn:${Partition}:sns:${Region}:${AccountId}:slack-otherevents
+          - Partition: !Ref AWS::Partition
+            AccountId: !Ref AWS::AccountId
+            Region: !Ref AWS::Region
+      ComparisonOperator: GreatherThanOrEqualToThreshold
+      Dimensions: 
+        - Name: FunctionName
+          Value: !Ref ProofAddressMockFunction
+      EvaluationPeriods: 1
+      MetricName: Errors
+      Namespace: AWS/Lambda
+      Period: 60
+      Statistic: Sum
+      Threshold: 1
 
 Outputs:
   ProofAddressFunction:
