@@ -1,0 +1,615 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+
+Parameters:
+  gitsha:
+    Type: String
+    Description: Git sha
+  environment:
+    Type: String
+    Description: Deployment environment
+    Default: "dev"
+
+Metadata:
+  AWS::ServerlessRepo::Application:
+    Name: login-idp-functions
+    Description: login.gov idp functions
+    Author: logindotgov
+    SpdxLicenseId: CC0-1.0
+    HomePageUrl: https://github.com/18f/identity-idp-functions
+    SemanticVersion: 0.0.1
+    SourceCodeUrl: https://github.com/18f/identity-idp-functions
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      -
+        Label:
+          default: Application Settings
+        Parameters:
+          - gitsha
+          - environment
+
+Description: >
+  identity-idp-functions
+
+  IDP functions for login.gov
+
+Globals:
+  Function:
+    Timeout: 60
+    MemorySize: 128
+    Runtime: ruby2.7
+    Environment:
+      Variables:
+        HTTP_PROXY: !Sub
+          - '{{resolve:ssm:/${Environment}/network/outboundproxy/url:1}}'
+          - Environment: !Ref environment
+        HTTPS_PROXY: !Sub
+          - '{{resolve:ssm:/${Environment}/network/outboundproxy/url:1}}'
+          - Environment: !Ref environment
+        NO_PROXY: !Sub
+          - '{{resolve:ssm:/${Environment}/network/outboundproxy/no_proxy:1}}'
+          - Environment: !Ref environment
+        ENVIRONMENT_NAME: !Ref environment
+    Tags:
+      environment: !Ref environment
+
+Resources:
+  ProofAddressFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub
+        - ${Environment}-idp-functions-ProofAddressFunction
+        - Environment: !Ref environment
+      CodeUri: proof_address/lib/
+      Handler: proof_address.IdentityIdpFunctions::ProofAddress.handle
+      AutoPublishAlias: !Ref environment
+      DeploymentPreference:
+        Type: AllAtOnce
+      Layers:
+        - !Ref AWSRubySDKLayer
+      Environment:
+        Variables:
+          S3_BUCKET_NAME: !Sub
+            - login-gov-idp-doc-capture-${Environment}.${AccountId}-${Region}
+            - Environment: !Ref environment
+              AccountId: !Ref AWS::AccountId
+              Region: !Ref AWS::Region
+          KMS_KEY_ALIAS: !Sub
+            - ${Environment}-idp-doc-capture
+            - Environment: !Ref environment
+      Policies:
+        - Statement:
+          - Sid: S3ObjectAccess
+            Effect: Allow
+            Action:
+            - s3:PutObject
+            - s3:GetObject
+            - s3:DeleteObject
+            Resource: !Sub
+              - arn:aws:s3:::login-gov-idp-doc-capture-${Environment}.${AccountId}-${Region}/*
+              - Environment: !Ref environment
+                AccountId: !Ref AWS::AccountId
+                Region: !Ref AWS::Region
+        - Statement:
+          - Sid: S3BucketAccess
+            Effect: Allow
+            Action:
+            - s3:ListBucket
+            Resource: !Sub
+              - arn:aws:s3:::login-gov-idp-doc-capture-${Environment}.${AccountId}-${Region}
+              - Environment: !Ref environment
+                AccountId: !Ref AWS::AccountId
+                Region: !Ref AWS::Region
+        - Statement:
+          - Sid: KMS
+            Effect: Allow
+            Action:
+              - kms:GenerateDataKey
+              - kms:Encrypt
+              - kms:DescribeKey
+              - kms:Decrypt
+            Resource: !Sub
+              - '{{resolve:ssm:/${Environment}/idp/doc-capture/kms/arn:1}}'
+              - Environment: !Ref environment
+        - Statement:
+          - Sid: SSMGet
+            Effect: Allow
+            Action:
+              - ssm:GetParameters
+              - ssm:GetParameter
+            Resource: !Join
+              - ''
+              - - 'arn:'
+                - !Ref AWS::Partition
+                - ':ssm:'
+                - !Ref AWS::Region
+                - ':'
+                - !Ref AWS::AccountId
+                - ':parameter/'
+                - !Ref environment
+                - '*'
+          - Sid: SSM
+            Effect: Allow
+            Action:
+              - ssm:DescribeParameters
+            Resource:
+              - "*"
+      VpcConfig:
+        SecurityGroupIds:
+          - !GetAtt ProofAddressSecurityGroup.GroupId
+        SubnetIds:
+          - !Sub
+              - '{{resolve:ssm:/${Environment}/network/subnet/private1/id:1}}'
+              - Environment: !Ref environment
+          -  !Sub
+              - '{{resolve:ssm:/${Environment}/network/subnet/private2/id:1}}'
+              - Environment: !Ref environment
+          - !Sub
+              - '{{resolve:ssm:/${Environment}/network/subnet/private3/id:1}}'
+              - Environment: !Ref environment
+
+
+  ProofAddressFunctionArn:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Type: String
+      Name: !Sub
+        - /${Environment}/idp/lambda/ProofAddress/arn
+        - Environment: !Ref environment
+      Value: !GetAtt ProofAddressFunction.Arn
+
+  ProofAddressSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      VpcId: !Sub
+        - '{{resolve:ssm:/${Environment}/network/vpc/id:1}}'
+        - Environment: !Ref environment
+      GroupDescription: Proof Address Lambda Function
+      SecurityGroupEgress:
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 3128
+          ToPort: 3128
+          CidrIp: 172.16.32.0/22
+
+  # add all functions that need gitsha alias to this list
+  ApplicationLambdaArns:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Type: StringList
+      Name: !Sub
+        - /${Environment}/idp/lambda/application-functions
+        - Environment: !Ref environment
+      Value: !Join
+        - ','
+        - - !GetAtt ProofAddressFunction.Arn
+          - !GetAtt ProofAddressMockFunction.Arn
+          - !GetAtt ProofResolutionFunction.Arn
+          - !GetAtt ProofResolutionMockFunction.Arn
+
+  ApplicationLambdaGitSha:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Type: String
+      Name: !Sub
+        - /${Environment}/idp/lambda/gitsha
+        - Environment: !Ref environment
+      Value: !Ref gitsha
+
+  ProofAddressMockFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      FunctionName: !Sub
+        - ${Environment}-idp-functions-ProofAddressMockFunction
+        - Environment: !Ref environment
+      CodeUri: proof_address_mock/lib/
+      Handler: proof_address_mock.IdentityIdpFunctions::ProofAddressMock.handle
+      MemorySize: 128
+      AutoPublishAlias: !Ref environment
+      DeploymentPreference:
+        Type: AllAtOnce
+      VersionDescription: !Ref gitsha
+      Layers:
+        - !Ref AWSRubySDKLayer
+      Environment:
+        Variables:
+          S3_BUCKET_NAME: !Sub
+            - login-gov-idp-doc-capture-${Environment}.${AccountId}-${Region}
+            - Environment: !Ref environment
+              AccountId: !Ref AWS::AccountId
+              Region: !Ref AWS::Region
+          KMS_KEY_ALIAS: !Sub
+            - ${Environment}-idp-doc-capture
+            - Environment: !Ref environment
+      Policies:
+        - Statement:
+          - Sid: S3ObjectAccess
+            Effect: Allow
+            Action:
+            - s3:PutObject
+            - s3:GetObject
+            - s3:DeleteObject
+            Resource: !Sub
+              - arn:aws:s3:::login-gov-idp-doc-capture-${Environment}.${AccountId}-${Region}/*
+              - Environment: !Ref environment
+                AccountId: !Ref AWS::AccountId
+                Region: !Ref AWS::Region
+        - Statement:
+          - Sid: S3BucketAccess
+            Effect: Allow
+            Action:
+            - s3:ListBucket
+            Resource: !Sub
+              - arn:aws:s3:::login-gov-idp-doc-capture-${Environment}.${AccountId}-${Region}
+              - Environment: !Ref environment
+                AccountId: !Ref AWS::AccountId
+                Region: !Ref AWS::Region
+        - Statement:
+          - Sid: KMS
+            Effect: Allow
+            Action:
+              - kms:GenerateDataKey
+              - kms:Encrypt
+              - kms:DescribeKey
+              - kms:Decrypt
+            Resource: !Sub
+              - '{{resolve:ssm:/${Environment}/idp/doc-capture/kms/arn:1}}'
+              - Environment: !Ref environment
+        - Statement:
+          - Sid: SSMGet
+            Effect: Allow
+            Action:
+              - ssm:GetParameters
+              - ssm:GetParameter
+            Resource: !Join
+              - ''
+              - - 'arn:'
+                - !Ref AWS::Partition
+                - ':ssm:'
+                - !Ref AWS::Region
+                - ':'
+                - !Ref AWS::AccountId
+                - ':parameter/'
+                - !Ref environment
+                - '*'
+          - Sid: SSM
+            Effect: Allow
+            Action:
+              - ssm:DescribeParameters
+            Resource:
+              - "*"
+      VpcConfig:
+        SecurityGroupIds:
+          - !GetAtt ProofAddressMockSecurityGroup.GroupId
+        SubnetIds:
+          - !Sub
+              - '{{resolve:ssm:/${Environment}/network/subnet/private1/id:1}}'
+              - Environment: !Ref environment
+          -  !Sub
+              - '{{resolve:ssm:/${Environment}/network/subnet/private2/id:1}}'
+              - Environment: !Ref environment
+          - !Sub
+              - '{{resolve:ssm:/${Environment}/network/subnet/private3/id:1}}'
+              - Environment: !Ref environment
+      Tags:
+        environment: !Ref environment
+
+  ProofAddressMockFunctionArn:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Type: String
+      Name: !Sub
+        - /${Environment}/idp/lambda/ProofAddressMock/arn
+        - Environment: !Ref environment
+      Value: !GetAtt ProofAddressMockFunction.Arn
+
+  ProofAddressMockSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      VpcId: !Sub
+        - '{{resolve:ssm:/${Environment}/network/vpc/id:1}}'
+        - Environment: !Ref environment
+      GroupDescription: Proof Address Mock Lambda Function
+      SecurityGroupEgress:
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 3128
+          ToPort: 3128
+          CidrIp: 172.16.32.0/22
+
+  ProofResolutionFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      FunctionName: !Sub
+        - ${Environment}-idp-functions-ProofResolutionFunction
+        - Environment: !Ref environment
+      CodeUri: proof_resolution/lib/
+      Handler: proof_resolution.IdentityIdpFunctions::ProofResolution.handle
+      MemorySize: 128
+      AutoPublishAlias: !Ref environment
+      DeploymentPreference:
+        Type: AllAtOnce
+      VersionDescription: !Ref gitsha
+      Layers:
+        - !Ref AWSRubySDKLayer
+      Environment:
+        Variables:
+          S3_BUCKET_NAME: !Sub
+            - login-gov-idp-doc-capture-${Environment}.${AccountId}-${Region}
+            - Environment: !Ref environment
+              AccountId: !Ref AWS::AccountId
+              Region: !Ref AWS::Region
+          KMS_KEY_ALIAS: !Sub
+            - ${Environment}-idp-doc-capture
+            - Environment: !Ref environment
+      Policies:
+        - Statement:
+          - Sid: S3ObjectAccess
+            Effect: Allow
+            Action:
+            - s3:PutObject
+            - s3:GetObject
+            - s3:DeleteObject
+            Resource: !Sub
+              - arn:aws:s3:::login-gov-idp-doc-capture-${Environment}.${AccountId}-${Region}/*
+              - Environment: !Ref environment
+                AccountId: !Ref AWS::AccountId
+                Region: !Ref AWS::Region
+        - Statement:
+          - Sid: S3BucketAccess
+            Effect: Allow
+            Action:
+            - s3:ListBucket
+            Resource: !Sub
+              - arn:aws:s3:::login-gov-idp-doc-capture-${Environment}.${AccountId}-${Region}
+              - Environment: !Ref environment
+                AccountId: !Ref AWS::AccountId
+                Region: !Ref AWS::Region
+        - Statement:
+          - Sid: KMS
+            Effect: Allow
+            Action:
+              - kms:GenerateDataKey
+              - kms:Encrypt
+              - kms:DescribeKey
+              - kms:Decrypt
+            Resource: !Sub
+              - '{{resolve:ssm:/${Environment}/idp/doc-capture/kms/arn:1}}'
+              - Environment: !Ref environment
+        - Statement:
+          - Sid: SSMGet
+            Effect: Allow
+            Action:
+              - ssm:GetParameters
+              - ssm:GetParameter
+            Resource: !Join
+              - ''
+              - - 'arn:'
+                - !Ref AWS::Partition
+                - ':ssm:'
+                - !Ref AWS::Region
+                - ':'
+                - !Ref AWS::AccountId
+                - ':parameter/'
+                - !Ref environment
+                - '*'
+          - Sid: SSM
+            Effect: Allow
+            Action:
+              - ssm:DescribeParameters
+            Resource:
+              - "*"
+      VpcConfig:
+        SecurityGroupIds:
+          - !GetAtt ProofResolutionSecurityGroup.GroupId
+        SubnetIds:
+          - !Sub
+              - '{{resolve:ssm:/${Environment}/network/subnet/private1/id:1}}'
+              - Environment: !Ref environment
+          -  !Sub
+              - '{{resolve:ssm:/${Environment}/network/subnet/private2/id:1}}'
+              - Environment: !Ref environment
+          - !Sub
+              - '{{resolve:ssm:/${Environment}/network/subnet/private3/id:1}}'
+              - Environment: !Ref environment
+      Tags:
+        environment: !Ref environment
+
+  ProofResolutionFunctionArn:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Type: String
+      Name: !Sub
+        - /${Environment}/idp/lambda/ProofResolution/arn
+        - Environment: !Ref environment
+      Value: !GetAtt ProofResolutionFunction.Arn
+
+  ProofResolutionSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      VpcId: !Sub
+        - '{{resolve:ssm:/${Environment}/network/vpc/id:1}}'
+        - Environment: !Ref environment
+      GroupDescription: Proof Resolution Lambda Function
+      SecurityGroupEgress:
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 3128
+          ToPort: 3128
+          CidrIp: 172.16.32.0/22
+
+  ProofResolutionMockFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      FunctionName: !Sub
+        - ${Environment}-idp-functions-ProofResolutionMockFunction
+        - Environment: !Ref environment
+      CodeUri: proof_resolution_mock/lib/
+      Handler: proof_resolution_mock.IdentityIdpFunctions::ProofResolutionMock.handle
+      MemorySize: 128
+      AutoPublishAlias: !Ref environment
+      DeploymentPreference:
+        Type: AllAtOnce
+      VersionDescription: !Ref gitsha
+      Layers:
+        - !Ref AWSRubySDKLayer
+      Environment:
+        Variables:
+          S3_BUCKET_NAME: !Sub
+            - login-gov-idp-doc-capture-${Environment}.${AccountId}-${Region}
+            - Environment: !Ref environment
+              AccountId: !Ref AWS::AccountId
+              Region: !Ref AWS::Region
+          KMS_KEY_ALIAS: !Sub
+            - ${Environment}-idp-doc-capture
+            - Environment: !Ref environment
+      Policies:
+        - Statement:
+          - Sid: S3ObjectAccess
+            Effect: Allow
+            Action:
+            - s3:PutObject
+            - s3:GetObject
+            - s3:DeleteObject
+            Resource: !Sub
+              - arn:aws:s3:::login-gov-idp-doc-capture-${Environment}.${AccountId}-${Region}/*
+              - Environment: !Ref environment
+                AccountId: !Ref AWS::AccountId
+                Region: !Ref AWS::Region
+        - Statement:
+          - Sid: S3BucketAccess
+            Effect: Allow
+            Action:
+            - s3:ListBucket
+            Resource: !Sub
+              - arn:aws:s3:::login-gov-idp-doc-capture-${Environment}.${AccountId}-${Region}
+              - Environment: !Ref environment
+                AccountId: !Ref AWS::AccountId
+                Region: !Ref AWS::Region
+        - Statement:
+          - Sid: KMS
+            Effect: Allow
+            Action:
+              - kms:GenerateDataKey
+              - kms:Encrypt
+              - kms:DescribeKey
+              - kms:Decrypt
+            Resource: !Sub
+              - '{{resolve:ssm:/${Environment}/idp/doc-capture/kms/arn:1}}'
+              - Environment: !Ref environment
+        - Statement:
+          - Sid: SSMGet
+            Effect: Allow
+            Action:
+              - ssm:GetParameters
+              - ssm:GetParameter
+            Resource: !Join
+              - ''
+              - - 'arn:'
+                - !Ref AWS::Partition
+                - ':ssm:'
+                - !Ref AWS::Region
+                - ':'
+                - !Ref AWS::AccountId
+                - ':parameter/'
+                - !Ref environment
+                - '*'
+          - Sid: SSM
+            Effect: Allow
+            Action:
+              - ssm:DescribeParameters
+            Resource:
+              - "*"
+      VpcConfig:
+        SecurityGroupIds:
+          - !GetAtt ProofResolutionMockSecurityGroup.GroupId
+        SubnetIds:
+          - !Sub
+              - '{{resolve:ssm:/${Environment}/network/subnet/private1/id:1}}'
+              - Environment: !Ref environment
+          -  !Sub
+              - '{{resolve:ssm:/${Environment}/network/subnet/private2/id:1}}'
+              - Environment: !Ref environment
+          - !Sub
+              - '{{resolve:ssm:/${Environment}/network/subnet/private3/id:1}}'
+              - Environment: !Ref environment
+      Tags:
+        environment: !Ref environment
+
+  ProofResolutionMockFunctionArn:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Type: String
+      Name: !Sub
+        - /${Environment}/idp/lambda/ProofResolutionMock/arn
+        - Environment: !Ref environment
+      Value: !GetAtt ProofResolutionMockFunction.Arn
+
+  ProofResolutionMockSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      VpcId: !Sub
+        - '{{resolve:ssm:/${Environment}/network/vpc/id:1}}'
+        - Environment: !Ref environment
+      GroupDescription: Proof Resolution Mock Lambda Function
+      SecurityGroupEgress:
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 3128
+          ToPort: 3128
+          CidrIp: 172.16.32.0/22
+
+  AWSRubySDKLayer:
+    Type: "AWS::Serverless::LayerVersion"
+    Properties:
+      LayerName: !Sub
+        - ${Environment}-idp-ruby-sdk
+        - Environment: !Ref environment
+      Description: AWS Ruby SDK
+      ContentUri: aws-ruby-sdk
+      CompatibleRuntimes:
+        - ruby2.7
+      RetentionPolicy: Retain
+    Metadata:
+      BuildMethod: ruby2.7
+
+Outputs:
+  ProofAddressFunction:
+    Description: "Proof Address Lambda Function ARN"
+    Value: !GetAtt ProofAddressFunction.Arn
+  ProofAddressFunctionIamRole:
+    Description: "Proof Address Role created for Proof Address function"
+    Value: !GetAtt ProofAddressFunctionRole.Arn
+
+  ProofAddressMockFunction:
+    Description: "Proof Address Mock Lambda Function ARN"
+    Value: !GetAtt ProofAddressMockFunction.Arn
+  ProofAddressMockFunctionIamRole:
+    Description: "Proof Address Mock Role created for Proof Address Mock function"
+    Value: !GetAtt ProofAddressMockFunctionRole.Arn
+
+  ProofResolutionFunction:
+    Description: "Proof Resolution Lambda Function ARN"
+    Value: !GetAtt ProofResolutionFunction.Arn
+  ProofResolutionFunctionIamRole:
+    Description: "Proof Resolution Role created for Proof Resolution function"
+    Value: !GetAtt ProofResolutionFunctionRole.Arn
+
+  ProofResolutionMockFunction:
+    Description: "Proof Resolution Mock Lambda Function ARN"
+    Value: !GetAtt ProofResolutionMockFunction.Arn
+  ProofResolutionMockFunctionIamRole:
+    Description: "Proof Resolution Mock Role created for Proof Address Mock function"
+    Value: !GetAtt ProofResolutionMockFunctionRole.Arn
