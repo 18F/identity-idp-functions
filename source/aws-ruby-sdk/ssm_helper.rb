@@ -5,7 +5,7 @@ module IdentityIdpFunctions
     # @return [String]
     def load(parameter_name)
       ssm_client.get_parameter(
-        name: "/#{env_name}/idp/doc-capture/#{parameter_name}",
+        name: "/#{env_name}/idp/functions/#{parameter_name}",
         with_decryption: true,
       ).parameter.value
     end
