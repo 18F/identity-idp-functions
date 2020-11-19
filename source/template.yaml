@@ -79,74 +79,74 @@ Resources:
             - Environment: !Ref environment
       Policies:
         - Statement:
-            - Sid: S3ObjectAccess
-              Effect: Allow
-              Action:
-                - s3:PutObject
-                - s3:GetObject
-                - s3:DeleteObject
-              Resource: !Sub
-                - arn:aws:s3:::login-gov-idp-doc-capture-${Environment}.${AccountId}-${Region}/*
-                - Environment: !Ref environment
-                  AccountId: !Ref AWS::AccountId
-                  Region: !Ref AWS::Region
+          - Sid: S3ObjectAccess
+            Effect: Allow
+            Action:
+            - s3:PutObject
+            - s3:GetObject
+            - s3:DeleteObject
+            Resource: !Sub
+              - arn:aws:s3:::login-gov-idp-doc-capture-${Environment}.${AccountId}-${Region}/*
+              - Environment: !Ref environment
+                AccountId: !Ref AWS::AccountId
+                Region: !Ref AWS::Region
         - Statement:
-            - Sid: S3BucketAccess
-              Effect: Allow
-              Action:
-                - s3:ListBucket
-              Resource: !Sub
-                - arn:aws:s3:::login-gov-idp-doc-capture-${Environment}.${AccountId}-${Region}
-                - Environment: !Ref environment
-                  AccountId: !Ref AWS::AccountId
-                  Region: !Ref AWS::Region
+          - Sid: S3BucketAccess
+            Effect: Allow
+            Action:
+            - s3:ListBucket
+            Resource: !Sub
+              - arn:aws:s3:::login-gov-idp-doc-capture-${Environment}.${AccountId}-${Region}
+              - Environment: !Ref environment
+                AccountId: !Ref AWS::AccountId
+                Region: !Ref AWS::Region
         - Statement:
-            - Sid: KMS
-              Effect: Allow
-              Action:
-                - kms:GenerateDataKey
-                - kms:Encrypt
-                - kms:DescribeKey
-                - kms:Decrypt
-              Resource: !Sub
-                - '{{resolve:ssm:/${Environment}/idp/doc-capture/kms/arn:1}}'
-                - Environment: !Ref environment
+          - Sid: KMS
+            Effect: Allow
+            Action:
+              - kms:GenerateDataKey
+              - kms:Encrypt
+              - kms:DescribeKey
+              - kms:Decrypt
+            Resource: !Sub
+              - '{{resolve:ssm:/${Environment}/idp/doc-capture/kms/arn:1}}'
+              - Environment: !Ref environment
         - Statement:
-            - Sid: SSMGet
-              Effect: Allow
-              Action:
-                - ssm:GetParameters
-                - ssm:GetParameter
-              Resource: !Join
-                - ''
-                - - 'arn:'
-                  - !Ref AWS::Partition
-                  - ':ssm:'
-                  - !Ref AWS::Region
-                  - ':'
-                  - !Ref AWS::AccountId
-                  - ':parameter/'
-                  - !Ref environment
-                  - '*'
-            - Sid: SSM
-              Effect: Allow
-              Action:
-                - ssm:DescribeParameters
-              Resource:
-                - "*"
+          - Sid: SSMGet
+            Effect: Allow
+            Action:
+              - ssm:GetParameters
+              - ssm:GetParameter
+            Resource: !Join
+              - ''
+              - - 'arn:'
+                - !Ref AWS::Partition
+                - ':ssm:'
+                - !Ref AWS::Region
+                - ':'
+                - !Ref AWS::AccountId
+                - ':parameter/'
+                - !Ref environment
+                - '*'
+          - Sid: SSM
+            Effect: Allow
+            Action:
+              - ssm:DescribeParameters
+            Resource:
+              - "*"
       VpcConfig:
         SecurityGroupIds:
           - !GetAtt ProofAddressSecurityGroup.GroupId
         SubnetIds:
           - !Sub
-            - '{{resolve:ssm:/${Environment}/network/subnet/private1/id:1}}'
-            - Environment: !Ref environment
+              - '{{resolve:ssm:/${Environment}/network/subnet/private1/id:1}}'
+              - Environment: !Ref environment
           -  !Sub
-            - '{{resolve:ssm:/${Environment}/network/subnet/private2/id:1}}'
-            - Environment: !Ref environment
+              - '{{resolve:ssm:/${Environment}/network/subnet/private2/id:1}}'
+              - Environment: !Ref environment
           - !Sub
-            - '{{resolve:ssm:/${Environment}/network/subnet/private3/id:1}}'
-            - Environment: !Ref environment
+              - '{{resolve:ssm:/${Environment}/network/subnet/private3/id:1}}'
+              - Environment: !Ref environment
 
 
   ProofAddressFunctionArn:
@@ -226,74 +226,74 @@ Resources:
             - Environment: !Ref environment
       Policies:
         - Statement:
-            - Sid: S3ObjectAccess
-              Effect: Allow
-              Action:
-                - s3:PutObject
-                - s3:GetObject
-                - s3:DeleteObject
-              Resource: !Sub
-                - arn:aws:s3:::login-gov-idp-doc-capture-${Environment}.${AccountId}-${Region}/*
-                - Environment: !Ref environment
-                  AccountId: !Ref AWS::AccountId
-                  Region: !Ref AWS::Region
+          - Sid: S3ObjectAccess
+            Effect: Allow
+            Action:
+            - s3:PutObject
+            - s3:GetObject
+            - s3:DeleteObject
+            Resource: !Sub
+              - arn:aws:s3:::login-gov-idp-doc-capture-${Environment}.${AccountId}-${Region}/*
+              - Environment: !Ref environment
+                AccountId: !Ref AWS::AccountId
+                Region: !Ref AWS::Region
         - Statement:
-            - Sid: S3BucketAccess
-              Effect: Allow
-              Action:
-                - s3:ListBucket
-              Resource: !Sub
-                - arn:aws:s3:::login-gov-idp-doc-capture-${Environment}.${AccountId}-${Region}
-                - Environment: !Ref environment
-                  AccountId: !Ref AWS::AccountId
-                  Region: !Ref AWS::Region
+          - Sid: S3BucketAccess
+            Effect: Allow
+            Action:
+            - s3:ListBucket
+            Resource: !Sub
+              - arn:aws:s3:::login-gov-idp-doc-capture-${Environment}.${AccountId}-${Region}
+              - Environment: !Ref environment
+                AccountId: !Ref AWS::AccountId
+                Region: !Ref AWS::Region
         - Statement:
-            - Sid: KMS
-              Effect: Allow
-              Action:
-                - kms:GenerateDataKey
-                - kms:Encrypt
-                - kms:DescribeKey
-                - kms:Decrypt
-              Resource: !Sub
-                - '{{resolve:ssm:/${Environment}/idp/doc-capture/kms/arn:1}}'
-                - Environment: !Ref environment
+          - Sid: KMS
+            Effect: Allow
+            Action:
+              - kms:GenerateDataKey
+              - kms:Encrypt
+              - kms:DescribeKey
+              - kms:Decrypt
+            Resource: !Sub
+              - '{{resolve:ssm:/${Environment}/idp/doc-capture/kms/arn:1}}'
+              - Environment: !Ref environment
         - Statement:
-            - Sid: SSMGet
-              Effect: Allow
-              Action:
-                - ssm:GetParameters
-                - ssm:GetParameter
-              Resource: !Join
-                - ''
-                - - 'arn:'
-                  - !Ref AWS::Partition
-                  - ':ssm:'
-                  - !Ref AWS::Region
-                  - ':'
-                  - !Ref AWS::AccountId
-                  - ':parameter/'
-                  - !Ref environment
-                  - '*'
-            - Sid: SSM
-              Effect: Allow
-              Action:
-                - ssm:DescribeParameters
-              Resource:
-                - "*"
+          - Sid: SSMGet
+            Effect: Allow
+            Action:
+              - ssm:GetParameters
+              - ssm:GetParameter
+            Resource: !Join
+              - ''
+              - - 'arn:'
+                - !Ref AWS::Partition
+                - ':ssm:'
+                - !Ref AWS::Region
+                - ':'
+                - !Ref AWS::AccountId
+                - ':parameter/'
+                - !Ref environment
+                - '*'
+          - Sid: SSM
+            Effect: Allow
+            Action:
+              - ssm:DescribeParameters
+            Resource:
+              - "*"
       VpcConfig:
         SecurityGroupIds:
           - !GetAtt ProofAddressMockSecurityGroup.GroupId
         SubnetIds:
           - !Sub
-            - '{{resolve:ssm:/${Environment}/network/subnet/private1/id:1}}'
-            - Environment: !Ref environment
+              - '{{resolve:ssm:/${Environment}/network/subnet/private1/id:1}}'
+              - Environment: !Ref environment
           -  !Sub
-            - '{{resolve:ssm:/${Environment}/network/subnet/private2/id:1}}'
-            - Environment: !Ref environment
+              - '{{resolve:ssm:/${Environment}/network/subnet/private2/id:1}}'
+              - Environment: !Ref environment
           - !Sub
-            - '{{resolve:ssm:/${Environment}/network/subnet/private3/id:1}}'
-            - Environment: !Ref environment
+              - '{{resolve:ssm:/${Environment}/network/subnet/private3/id:1}}'
+              - Environment: !Ref environment
       Tags:
         environment: !Ref environment
 
@@ -350,74 +350,74 @@ Resources:
             - Environment: !Ref environment
       Policies:
         - Statement:
-            - Sid: S3ObjectAccess
-              Effect: Allow
-              Action:
-                - s3:PutObject
-                - s3:GetObject
-                - s3:DeleteObject
-              Resource: !Sub
-                - arn:aws:s3:::login-gov-idp-doc-capture-${Environment}.${AccountId}-${Region}/*
-                - Environment: !Ref environment
-                  AccountId: !Ref AWS::AccountId
-                  Region: !Ref AWS::Region
+          - Sid: S3ObjectAccess
+            Effect: Allow
+            Action:
+            - s3:PutObject
+            - s3:GetObject
+            - s3:DeleteObject
+            Resource: !Sub
+              - arn:aws:s3:::login-gov-idp-doc-capture-${Environment}.${AccountId}-${Region}/*
+              - Environment: !Ref environment
+                AccountId: !Ref AWS::AccountId
+                Region: !Ref AWS::Region
         - Statement:
-            - Sid: S3BucketAccess
-              Effect: Allow
-              Action:
-                - s3:ListBucket
-              Resource: !Sub
-                - arn:aws:s3:::login-gov-idp-doc-capture-${Environment}.${AccountId}-${Region}
-                - Environment: !Ref environment
-                  AccountId: !Ref AWS::AccountId
-                  Region: !Ref AWS::Region
+          - Sid: S3BucketAccess
+            Effect: Allow
+            Action:
+            - s3:ListBucket
+            Resource: !Sub
+              - arn:aws:s3:::login-gov-idp-doc-capture-${Environment}.${AccountId}-${Region}
+              - Environment: !Ref environment
+                AccountId: !Ref AWS::AccountId
+                Region: !Ref AWS::Region
         - Statement:
-            - Sid: KMS
-              Effect: Allow
-              Action:
-                - kms:GenerateDataKey
-                - kms:Encrypt
-                - kms:DescribeKey
-                - kms:Decrypt
-              Resource: !Sub
-                - '{{resolve:ssm:/${Environment}/idp/doc-capture/kms/arn:1}}'
-                - Environment: !Ref environment
+          - Sid: KMS
+            Effect: Allow
+            Action:
+              - kms:GenerateDataKey
+              - kms:Encrypt
+              - kms:DescribeKey
+              - kms:Decrypt
+            Resource: !Sub
+              - '{{resolve:ssm:/${Environment}/idp/doc-capture/kms/arn:1}}'
+              - Environment: !Ref environment
         - Statement:
-            - Sid: SSMGet
-              Effect: Allow
-              Action:
-                - ssm:GetParameters
-                - ssm:GetParameter
-              Resource: !Join
-                - ''
-                - - 'arn:'
-                  - !Ref AWS::Partition
-                  - ':ssm:'
-                  - !Ref AWS::Region
-                  - ':'
-                  - !Ref AWS::AccountId
-                  - ':parameter/'
-                  - !Ref environment
-                  - '*'
-            - Sid: SSM
-              Effect: Allow
-              Action:
-                - ssm:DescribeParameters
-              Resource:
-                - "*"
+          - Sid: SSMGet
+            Effect: Allow
+            Action:
+              - ssm:GetParameters
+              - ssm:GetParameter
+            Resource: !Join
+              - ''
+              - - 'arn:'
+                - !Ref AWS::Partition
+                - ':ssm:'
+                - !Ref AWS::Region
+                - ':'
+                - !Ref AWS::AccountId
+                - ':parameter/'
+                - !Ref environment
+                - '*'
+          - Sid: SSM
+            Effect: Allow
+            Action:
+              - ssm:DescribeParameters
+            Resource:
+              - "*"
       VpcConfig:
         SecurityGroupIds:
           - !GetAtt ProofResolutionSecurityGroup.GroupId
         SubnetIds:
           - !Sub
-            - '{{resolve:ssm:/${Environment}/network/subnet/private1/id:1}}'
-            - Environment: !Ref environment
+              - '{{resolve:ssm:/${Environment}/network/subnet/private1/id:1}}'
+              - Environment: !Ref environment
           -  !Sub
-            - '{{resolve:ssm:/${Environment}/network/subnet/private2/id:1}}'
-            - Environment: !Ref environment
+              - '{{resolve:ssm:/${Environment}/network/subnet/private2/id:1}}'
+              - Environment: !Ref environment
           - !Sub
-            - '{{resolve:ssm:/${Environment}/network/subnet/private3/id:1}}'
-            - Environment: !Ref environment
+              - '{{resolve:ssm:/${Environment}/network/subnet/private3/id:1}}'
+              - Environment: !Ref environment
       Tags:
         environment: !Ref environment
 
@@ -474,74 +474,74 @@ Resources:
             - Environment: !Ref environment
       Policies:
         - Statement:
-            - Sid: S3ObjectAccess
-              Effect: Allow
-              Action:
-                - s3:PutObject
-                - s3:GetObject
-                - s3:DeleteObject
-              Resource: !Sub
-                - arn:aws:s3:::login-gov-idp-doc-capture-${Environment}.${AccountId}-${Region}/*
-                - Environment: !Ref environment
-                  AccountId: !Ref AWS::AccountId
-                  Region: !Ref AWS::Region
+          - Sid: S3ObjectAccess
+            Effect: Allow
+            Action:
+            - s3:PutObject
+            - s3:GetObject
+            - s3:DeleteObject
+            Resource: !Sub
+              - arn:aws:s3:::login-gov-idp-doc-capture-${Environment}.${AccountId}-${Region}/*
+              - Environment: !Ref environment
+                AccountId: !Ref AWS::AccountId
+                Region: !Ref AWS::Region
         - Statement:
-            - Sid: S3BucketAccess
-              Effect: Allow
-              Action:
-                - s3:ListBucket
-              Resource: !Sub
-                - arn:aws:s3:::login-gov-idp-doc-capture-${Environment}.${AccountId}-${Region}
-                - Environment: !Ref environment
-                  AccountId: !Ref AWS::AccountId
-                  Region: !Ref AWS::Region
+          - Sid: S3BucketAccess
+            Effect: Allow
+            Action:
+            - s3:ListBucket
+            Resource: !Sub
+              - arn:aws:s3:::login-gov-idp-doc-capture-${Environment}.${AccountId}-${Region}
+              - Environment: !Ref environment
+                AccountId: !Ref AWS::AccountId
+                Region: !Ref AWS::Region
         - Statement:
-            - Sid: KMS
-              Effect: Allow
-              Action:
-                - kms:GenerateDataKey
-                - kms:Encrypt
-                - kms:DescribeKey
-                - kms:Decrypt
-              Resource: !Sub
-                - '{{resolve:ssm:/${Environment}/idp/doc-capture/kms/arn:1}}'
-                - Environment: !Ref environment
+          - Sid: KMS
+            Effect: Allow
+            Action:
+              - kms:GenerateDataKey
+              - kms:Encrypt
+              - kms:DescribeKey
+              - kms:Decrypt
+            Resource: !Sub
+              - '{{resolve:ssm:/${Environment}/idp/doc-capture/kms/arn:1}}'
+              - Environment: !Ref environment
         - Statement:
-            - Sid: SSMGet
-              Effect: Allow
-              Action:
-                - ssm:GetParameters
-                - ssm:GetParameter
-              Resource: !Join
-                - ''
-                - - 'arn:'
-                  - !Ref AWS::Partition
-                  - ':ssm:'
-                  - !Ref AWS::Region
-                  - ':'
-                  - !Ref AWS::AccountId
-                  - ':parameter/'
-                  - !Ref environment
-                  - '*'
-            - Sid: SSM
-              Effect: Allow
-              Action:
-                - ssm:DescribeParameters
-              Resource:
-                - "*"
+          - Sid: SSMGet
+            Effect: Allow
+            Action:
+              - ssm:GetParameters
+              - ssm:GetParameter
+            Resource: !Join
+              - ''
+              - - 'arn:'
+                - !Ref AWS::Partition
+                - ':ssm:'
+                - !Ref AWS::Region
+                - ':'
+                - !Ref AWS::AccountId
+                - ':parameter/'
+                - !Ref environment
+                - '*'
+          - Sid: SSM
+            Effect: Allow
+            Action:
+              - ssm:DescribeParameters
+            Resource:
+              - "*"
       VpcConfig:
         SecurityGroupIds:
           - !GetAtt ProofResolutionMockSecurityGroup.GroupId
         SubnetIds:
           - !Sub
-            - '{{resolve:ssm:/${Environment}/network/subnet/private1/id:1}}'
-            - Environment: !Ref environment
+              - '{{resolve:ssm:/${Environment}/network/subnet/private1/id:1}}'
+              - Environment: !Ref environment
           -  !Sub
-            - '{{resolve:ssm:/${Environment}/network/subnet/private2/id:1}}'
-            - Environment: !Ref environment
+              - '{{resolve:ssm:/${Environment}/network/subnet/private2/id:1}}'
+              - Environment: !Ref environment
           - !Sub
-            - '{{resolve:ssm:/${Environment}/network/subnet/private3/id:1}}'
-            - Environment: !Ref environment
+              - '{{resolve:ssm:/${Environment}/network/subnet/private3/id:1}}'
+              - Environment: !Ref environment
       Tags:
         environment: !Ref environment
 
