@@ -8,17 +8,20 @@ require '/opt/ruby/lib/function_helper' if !defined?(IdentityIdpFunctions::Funct
 module IdentityIdpFunctions
   class ProofAddress
     include IdentityIdpFunctions::FaradayHelper
+    include IdentityIdpFunctions::LoggingHelper
 
     def self.handle(event:, context:, &callback_block) # rubocop:disable Lint/UnusedMethodArgument
       params = JSON.parse(event.to_json, symbolize_names: true)
       new(**params).proof(&callback_block)
     end
 
-    attr_reader :applicant_pii, :callback_url
+    attr_reader :applicant_pii, :callback_url, :trace_id, :timer
 
-    def initialize(applicant_pii:, callback_url:)
+    def initialize(applicant_pii:, callback_url:, trace_id: nil)
       @applicant_pii = applicant_pii
       @callback_url = callback_url
+      @trace_id = trace_id
+      @timer = IdentityIdpFunctions::Timer.new
     end
 
     def proof
@@ -26,8 +29,10 @@ module IdentityIdpFunctions
 
       raise Errors::MisconfiguredLambdaError if !block_given? && api_auth_token.to_s.empty?
 
-      proofer_result = with_retries(**faraday_retry_options) do
-        lexisnexis_proofer.proof(applicant_pii)
+      proofer_result = timer.time('address') do
+        with_retries(**faraday_retry_options) do
+          lexisnexis_proofer.proof(applicant_pii)
+        end
       end
 
       result = proofer_result.to_h
@@ -43,8 +48,17 @@ module IdentityIdpFunctions
       if block_given?
         yield callback_body
       else
-        post_callback(callback_body: callback_body)
+        timer.time('callback') do
+          post_callback(callback_body: callback_body)
+        end
       end
+
+      log_event(
+        name: 'ProofAddress',
+        trace_id: trace_id,
+        success: proofer_result.success?,
+        timing: timer.results
+      )
     end
 
     def post_callback(callback_body:)

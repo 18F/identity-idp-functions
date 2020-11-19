@@ -2,6 +2,7 @@ require 'bundler/setup'
 require 'identity-idp-functions'
 require 'webmock/rspec'
 require 'retries'
+require 'stringio'
 
 Retries.sleep_enabled = false
 
@@ -14,5 +15,18 @@ RSpec.configure do |config|
 
   config.expect_with :rspec do |c|
     c.syntax = :expect
+  end
+
+  config.before(:each) do
+    $logger_io = StringIO.new
+  end
+end
+
+# Monkeypatch to override logging to STDOUT in tests
+module IdentityIdpFunctions
+  module LoggingHelper
+    def default_logger_io
+      $logger_io
+    end
   end
 end

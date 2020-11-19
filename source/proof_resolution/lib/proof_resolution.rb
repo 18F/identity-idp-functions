@@ -9,18 +9,21 @@ require '/opt/ruby/lib/function_helper' if !defined?(IdentityIdpFunctions::Funct
 module IdentityIdpFunctions
   class ProofResolution
     include IdentityIdpFunctions::FaradayHelper
+    include IdentityIdpFunctions::LoggingHelper
 
     def self.handle(event:, context:, &callback_block) # rubocop:disable Lint/UnusedMethodArgument
       params = JSON.parse(event.to_json, symbolize_names: true)
       new(**params).proof(&callback_block)
     end
 
-    attr_reader :applicant_pii, :callback_url, :should_proof_state_id
+    attr_reader :applicant_pii, :callback_url, :should_proof_state_id, :trace_id, :timer
 
-    def initialize(applicant_pii:, callback_url:, should_proof_state_id:)
+    def initialize(applicant_pii:, callback_url:, should_proof_state_id:, trace_id: nil)
       @applicant_pii = applicant_pii
       @callback_url = callback_url
       @should_proof_state_id = should_proof_state_id
+      @trace_id = trace_id
+      @timer = IdentityIdpFunctions::Timer.new
     end
 
     def proof
@@ -28,19 +31,26 @@ module IdentityIdpFunctions
 
       raise Errors::MisconfiguredLambdaError if !block_given? && api_auth_token.to_s.empty?
 
-      proofer_result = with_retries(**faraday_retry_options) do
-        lexisnexis_proofer.proof(applicant_pii)
+      proofer_result = timer.time('resolution') do
+        with_retries(**faraday_retry_options) do
+          lexisnexis_proofer.proof(applicant_pii)
+        end
       end
 
       result = proofer_result.to_h
+      resolution_success = proofer_result.success?
 
       result[:context] = { stages: [resolution: LexisNexis::InstantVerify::Proofer.vendor_name] }
 
       result[:timed_out] = proofer_result.timed_out?
       result[:exception] = proofer_result.exception.inspect if proofer_result.exception
 
+      state_id_success = nil
       if should_proof_state_id && result[:success]
-        proof_state_id(result)
+        timer.time('state_id') do
+          proof_state_id(result)
+        end
+        state_id_success = result[:success]
       end
 
       callback_body = {
@@ -52,6 +62,14 @@ module IdentityIdpFunctions
       else
         post_callback(callback_body: callback_body)
       end
+
+      log_event(
+        name: 'ProofResolution',
+        trace_id: trace_id,
+        resolution_success: resolution_success,
+        state_id_success: state_id_success,
+        timing: timer.results
+      )
     end
 
     def proof_state_id(result)
