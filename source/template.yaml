@@ -175,7 +175,7 @@ Resources:
           ToPort: 3128
           CidrIp: 172.16.32.0/22
 
-    ProofDocmentFunction:
+  ProofDocumentFunction:
     Type: AWS::Serverless::Function 
     Properties:
       FunctionName: !Sub
@@ -268,16 +268,6 @@ Resources:
           - !Sub
               - '{{resolve:ssm:/${Environment}/network/subnet/private3/id:1}}'
               - Environment: !Ref environment
-      
-
-  ProofDocumentFunctionArn:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Type: String
-      Name: !Sub
-        - /${Environment}/idp/lambda/ProofDocument/arn
-        - Environment: !Ref environment
-      Value: !GetAtt ProofDocumentFunction.Arn
 
   ProofDocumentSecurityGroup:
     Type: AWS::EC2::SecurityGroup
