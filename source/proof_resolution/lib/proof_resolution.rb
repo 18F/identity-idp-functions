@@ -62,7 +62,7 @@ module IdentityIdpFunctions
       else
         post_callback(callback_body: callback_body)
       end
-
+    ensure
       log_event(
         name: 'ProofResolution',
         trace_id: trace_id,

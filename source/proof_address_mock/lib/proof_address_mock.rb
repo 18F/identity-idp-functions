@@ -50,11 +50,11 @@ module IdentityIdpFunctions
           post_callback(callback_body: callback_body)
         end
       end
-
+    ensure
       log_event(
         name: 'ProofAddressMock',
         trace_id: trace_id,
-        success: proofer_result.success?,
+        success: proofer_result&.success?,
         timing: timer.results,
       )
     end

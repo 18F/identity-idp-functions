@@ -57,10 +57,11 @@ module IdentityIdpFunctions
         end
       end
 
+    ensure
       log_event(
         name: 'ProofResolutionMock',
         trace_id: trace_id,
-        success: proofer_result.success?,
+        success: proofer_result&.success?,
         timing: timer.results,
       )
     end
