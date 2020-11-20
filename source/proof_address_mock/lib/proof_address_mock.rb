@@ -27,8 +27,10 @@ module IdentityIdpFunctions
     def proof
       raise Errors::MisconfiguredLambdaError if !block_given? && api_auth_token.to_s.empty?
 
-      proofer_result = with_retries(**faraday_retry_options) do
-        mock_proofer.proof(applicant_pii)
+      proofer_result = timer.time('address') do
+        with_retries(**faraday_retry_options) do
+          mock_proofer.proof(applicant_pii)
+        end
       end
 
       result = proofer_result.to_h
