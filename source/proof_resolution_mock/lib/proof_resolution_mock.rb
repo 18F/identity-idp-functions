@@ -61,7 +61,7 @@ module IdentityIdpFunctions
         name: 'ProofResolutionMock',
         trace_id: trace_id,
         success: proofer_result.success?,
-        timing: timer.results
+        timing: timer.results,
       )
     end
 

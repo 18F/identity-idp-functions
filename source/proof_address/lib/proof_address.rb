@@ -57,7 +57,7 @@ module IdentityIdpFunctions
         name: 'ProofAddress',
         trace_id: trace_id,
         success: proofer_result.success?,
-        timing: timer.results
+        timing: timer.results,
       )
     end
 

@@ -68,7 +68,7 @@ module IdentityIdpFunctions
         trace_id: trace_id,
         resolution_success: resolution_success,
         state_id_success: state_id_success,
-        timing: timer.results
+        timing: timer.results,
       )
     end
 

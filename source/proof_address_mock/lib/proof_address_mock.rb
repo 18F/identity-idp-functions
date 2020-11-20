@@ -55,7 +55,7 @@ module IdentityIdpFunctions
         name: 'ProofAddressMock',
         trace_id: trace_id,
         success: proofer_result.success?,
-        timing: timer.results
+        timing: timer.results,
       )
     end
 
