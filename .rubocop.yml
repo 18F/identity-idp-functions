@@ -462,3 +462,8 @@ Style/NegatedIf:
 Style/IfUnlessModifier:
   # Differs from IDP
   Enabled: false
+
+Style/GlobalVars:
+  Enabled: true
+  Exclude:
+    - '**/spec/**'
