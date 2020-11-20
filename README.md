@@ -42,6 +42,16 @@ end
     ```rb
     require "identity-idp-functions/$function_name"
     ```
+
+## Generating template.yaml
+
+`template.yaml` is used to generate the SAM build. We dynamically generate it and ignore it from
+git. To see what's generated, run:
+
+```
+./bin/generate-template
+```
+
 ## Running tests
 
 ```
