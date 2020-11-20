@@ -94,14 +94,7 @@ commands:
     steps:
       - run: gem update --system
       - run: gem install bundler
-      - restore_cache:
-          keys:
-            - v2-identity-idp-functions-bundle-{{ checksum "Gemfile" }}
       - run: bundle check || install --path vendor/bundle
-      - save_cache:
-          key: v2-identity-idp-functions-bundle-{{ checksum "Gemfile" }}
-          paths:
-            - vendor/bundle
 
   aws-cli-install:
     steps:
