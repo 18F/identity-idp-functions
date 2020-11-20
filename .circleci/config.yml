@@ -97,7 +97,7 @@ commands:
       - restore_cache:
           keys:
             - v2-identity-idp-functions-bundle-{{ checksum "Gemfile" }}
-      - run: bundle check || install --path vendor/bundle
+      - run: bundle check || bundle install --path vendor/bundle
       - save_cache:
           key: v2-identity-idp-functions-bundle-{{ checksum "Gemfile" }}
           paths:
