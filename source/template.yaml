@@ -54,8 +54,32 @@ Globals:
       environment: !Ref environment
 
 Resources:
+  # add all functions that need gitsha alias to this list
+  ApplicationLambdaArns:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Type: StringList
+      Name: !Sub
+        - /${Environment}/idp/lambda/application-functions
+        - Environment: !Ref environment
+      Value: !Join
+        - ','
+        - - !GetAtt ProofAddressFunction.Arn
+          - !GetAtt ProofAddressMockFunction.Arn
+          - !GetAtt ProofResolutionFunction.Arn
+          - !GetAtt ProofResolutionMockFunction.Arn
+
+  ApplicationLambdaGitSha:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Type: String
+      Name: !Sub
+        - /${Environment}/idp/lambda/gitsha
+        - Environment: !Ref environment
+      Value: !Ref gitsha
+
   ProofAddressFunction:
-    Type: AWS::Serverless::Function 
+    Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub
         - ${Environment}-idp-functions-ProofAddressFunction
@@ -147,7 +171,6 @@ Resources:
           - !Sub
               - '{{resolve:ssm:/${Environment}/network/subnet/private3/id:1}}'
               - Environment: !Ref environment
-      
 
   ProofAddressFunctionArn:
     Type: AWS::SSM::Parameter
@@ -174,30 +197,6 @@ Resources:
           FromPort: 3128
           ToPort: 3128
           CidrIp: 172.16.32.0/22
-
-  # add all functions that need gitsha alias to this list
-  ApplicationLambdaArns:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Type: StringList
-      Name: !Sub 
-        - /${Environment}/idp/lambda/application-functions
-        - Environment: !Ref environment
-      Value: !Join 
-        - ','
-        - - !GetAtt ProofAddressFunction.Arn
-          - !GetAtt ProofAddressMockFunction.Arn
-          - !GetAtt ProofResolutionFunction.Arn
-          - !GetAtt ProofResolutionMockFunction.Arn
-
-  ApplicationLambdaGitSha:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Type: String
-      Name: !Sub 
-        - /${Environment}/idp/lambda/gitsha
-        - Environment: !Ref environment
-      Value: !Ref gitsha
 
   ProofAddressMockFunction:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
@@ -574,7 +573,7 @@ Resources:
   AWSRubySDKLayer:
     Type: "AWS::Serverless::LayerVersion"
     Properties:
-      LayerName: !Sub 
+      LayerName: !Sub
         - ${Environment}-idp-ruby-sdk
         - Environment: !Ref environment
       Description: AWS Ruby SDK
