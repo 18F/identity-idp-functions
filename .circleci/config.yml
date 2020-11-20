@@ -1,9 +1,9 @@
 version: 2.1
 
 executors:
-  ubuntu-2004:
-    machine:
-      image: ubuntu-2004:202008-01
+  aws:
+    docker:
+      - image: amazon/aws-sam-cli-build-image-ruby2.7 
 
 workflows:
   lambda-functions:
@@ -33,33 +33,33 @@ workflows:
 
 jobs:
   build-specs:
-    executor: ubuntu-2004
+    executor: aws
     steps:
       - checkout
       - run-specs
 
   lints:
-    executor: ubuntu-2004
+    executor: aws
     steps:
       - checkout
       - run-lints
 
   build-package:
-    executor: ubuntu-2004
+    executor: aws
     steps:
-      - brew-install
+      #- brew-install
       - aws-cli-configure
-      - sam-cli-install
+      #- sam-cli-install
       - checkout
       - build-repo
 
   build-package-copy:
-    executor: ubuntu-2004
+    executor: aws
     steps:
-      - brew-install
+      #- brew-install
       - aws-cli-configure
       - aws-cli-configure-prod
-      - sam-cli-install
+      #- sam-cli-install
       - checkout
       - build-repo
       - copy-to-s3
@@ -110,6 +110,7 @@ commands:
       - run:
           name: "Configure AWS CLI"
           command: |
+            yum install openssl-devel -y
             aws configure set default.aws_access_key_id $AWS_ACCESS_KEY_ID
             aws configure set default.aws_secret_access_key $AWS_SECRET_ACCESS_KEY
             aws configure set default.region $AWS_DEFAULT_REGION
@@ -128,17 +129,14 @@ commands:
       - run:
           name: "Validate SAM template"
           command: |
-            PATH=/home/linuxbrew/.linuxbrew/bin:$PATH
             cd source
             sam validate -t template.yaml --profile default --debug
       - run:
           name: "Build Functions"
           command: |
-            PATH=/home/linuxbrew/.linuxbrew/bin:$PATH
             cd source
             sam build \
-              --template template.yaml \
-              --use-container
+              --template template.yaml
       - run:
           name: "Test Functions"
           command: |
@@ -146,7 +144,6 @@ commands:
       - run:
           name: "Package Functions"
           command: |
-            PATH=/home/linuxbrew/.linuxbrew/bin:$PATH
             cd source
             sam package \
               --profile default \
