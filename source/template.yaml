@@ -200,7 +200,7 @@ Resources:
       Value: !Ref gitsha
 
   ProofAddressMockFunction:
-    Type: AWS::Serverless::Function # More info on Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
       FunctionName: !Sub
         - ${Environment}-idp-functions-ProofAddressMockFunction
