@@ -1,3 +1,7 @@
+# DO NOT MANUALLY EDIT THIS FILE
+# INSTEAD:
+# - EDIT template.yaml.erb
+# - RUN bin/generate-template > source/template.yaml
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 
