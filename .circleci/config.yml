@@ -136,7 +136,7 @@ commands:
       - run:
           name: "Generate source/template.yaml"
           command: |
-          ./bin/generate-template-yaml > source/template.yaml
+            ./bin/generate-template-yaml > source/template.yaml
 
   build-repo:
     steps:
