@@ -64,7 +64,8 @@ Resources:
         - Environment: !Ref environment
       Value: !Join
         - ','
-        - - !GetAtt ProofAddressFunction.Arn
+        -
+          - !GetAtt ProofAddressFunction.Arn
           - !GetAtt ProofAddressMockFunction.Arn
           - !GetAtt ProofResolutionFunction.Arn
           - !GetAtt ProofResolutionMockFunction.Arn
@@ -78,17 +79,20 @@ Resources:
         - Environment: !Ref environment
       Value: !Ref gitsha
 
+
   ProofAddressFunction:
-    Type: AWS::Serverless::Function
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
       FunctionName: !Sub
         - ${Environment}-idp-functions-ProofAddressFunction
         - Environment: !Ref environment
       CodeUri: proof_address/lib/
       Handler: proof_address.IdentityIdpFunctions::ProofAddress.handle
+      MemorySize: 128
       AutoPublishAlias: !Ref environment
       DeploymentPreference:
         Type: AllAtOnce
+      VersionDescription: !Ref gitsha
       Layers:
         - !Ref AWSRubySDKLayer
       Environment:
@@ -171,6 +175,8 @@ Resources:
           - !Sub
               - '{{resolve:ssm:/${Environment}/network/subnet/private3/id:1}}'
               - Environment: !Ref environment
+      Tags:
+        environment: !Ref environment
 
   ProofAddressFunctionArn:
     Type: AWS::SSM::Parameter
@@ -610,5 +616,5 @@ Outputs:
     Description: "Proof Resolution Mock Lambda Function ARN"
     Value: !GetAtt ProofResolutionMockFunction.Arn
   ProofResolutionMockFunctionIamRole:
-    Description: "Proof Resolution Mock Role created for Proof Address Mock function"
+    Description: "Proof Resolution Mock Role created for Proof Resolution Mock function"
     Value: !GetAtt ProofResolutionMockFunctionRole.Arn
