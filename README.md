@@ -42,11 +42,6 @@ end
     ```rb
     require "identity-idp-functions/$function_name"
     ```
-3. Re-generate the `template.yaml` and check in the corresponding changes:
-    ```bash
-    bin/generate-template > source/template.yaml
-    ```
-
 ## Running tests
 
 ```
