@@ -224,4 +224,4 @@ Outputs:<% functions.each do |function| %>
   <%= function.camelize %>FunctionIamRole:
     Description: "<%= function.titleize %> Role created for <%= function.titleize %> function"
     Value: !GetAtt <%= function.camelize %>FunctionRole.Arn
-<% end %>
+<% end -%>
