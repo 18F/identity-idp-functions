@@ -5,6 +5,7 @@ require 'shared_examples_for_proofers'
 RSpec.describe IdentityIdpFunctions::ProofAddress do
   let(:idp_api_auth_token) { SecureRandom.hex }
   let(:callback_url) { 'https://example.login.gov/api/callbacks/proof-address/:token' }
+  let(:trace_id) { SecureRandom.uuid }
   let(:applicant_pii) do
     {
       first_name: 'Johnny',
@@ -64,6 +65,7 @@ RSpec.describe IdentityIdpFunctions::ProofAddress do
       {
         callback_url: callback_url,
         applicant_pii: applicant_pii,
+        trace_id: trace_id,
       }
     end
 
@@ -104,6 +106,7 @@ RSpec.describe IdentityIdpFunctions::ProofAddress do
       IdentityIdpFunctions::ProofAddress.new(
         callback_url: callback_url,
         applicant_pii: applicant_pii,
+        trace_id: trace_id,
       )
     end
 
@@ -129,6 +132,12 @@ RSpec.describe IdentityIdpFunctions::ProofAddress do
       end
 
       it_behaves_like 'callback url behavior'
+
+      it 'logs the trace_id and timing info' do
+        expect(function).to receive(:log_event).with(hash_including(:timing, trace_id: trace_id))
+
+        function.proof
+      end
     end
 
     context 'with an unsuccessful response from the proofer' do

@@ -7,6 +7,7 @@ RSpec.describe IdentityIdpFunctions::ProofResolutionMock do
   let(:callback_url) { 'https://example.login.gov/api/callbacks/proof-resolution/:token' }
   let(:ssn) { '123456789' }
   let(:bad_ssn) { IdentityIdpFunctions::ResolutionMockClient::NO_CONTACT_SSN }
+  let(:trace_id) { SecureRandom.uuid }
   let(:applicant_pii) do
     {
       first_name: 'Johnny',
@@ -59,6 +60,7 @@ RSpec.describe IdentityIdpFunctions::ProofResolutionMock do
         callback_url: callback_url,
         should_proof_state_id: true,
         applicant_pii: applicant_pii,
+        trace_id: trace_id,
       }
     end
 
@@ -103,6 +105,7 @@ RSpec.describe IdentityIdpFunctions::ProofResolutionMock do
         callback_url: callback_url,
         applicant_pii: applicant_pii,
         should_proof_state_id: should_proof_state_id,
+        trace_id: trace_id,
       )
     end
 
@@ -117,6 +120,12 @@ RSpec.describe IdentityIdpFunctions::ProofResolutionMock do
 
         expect(WebMock).to have_requested(:post, callback_url)
       end
+    end
+
+    it 'logs the trace_id and timing info' do
+      expect(function).to receive(:log_event).with(hash_including(:timing, trace_id: trace_id))
+
+      function.proof
     end
 
     context 'does not call state id with an unsuccessful response from the proofer' do
