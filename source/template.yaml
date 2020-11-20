@@ -175,6 +175,127 @@ Resources:
           ToPort: 3128
           CidrIp: 172.16.32.0/22
 
+    ProofDocmentFunction:
+    Type: AWS::Serverless::Function 
+    Properties:
+      FunctionName: !Sub
+        - ${Environment}-idp-functions-ProofDocumentFunction
+        - Environment: !Ref environment
+      CodeUri: proof_document/lib/
+      Handler: proof_document.IdentityIdpFunctions::ProofDocument.handle
+      AutoPublishAlias: !Ref environment
+      DeploymentPreference:
+        Type: AllAtOnce
+      Layers:
+        - !Ref AWSRubySDKLayer
+      Environment:
+        Variables:
+          S3_BUCKET_NAME: !Sub
+            - login-gov-idp-doc-capture-${Environment}.${AccountId}-${Region}
+            - Environment: !Ref environment
+              AccountId: !Ref AWS::AccountId
+              Region: !Ref AWS::Region
+          KMS_KEY_ALIAS: !Sub
+            - ${Environment}-idp-doc-capture
+            - Environment: !Ref environment
+      Policies:
+        - Statement:
+          - Sid: S3ObjectAccess
+            Effect: Allow
+            Action:
+            - s3:PutObject
+            - s3:GetObject
+            - s3:DeleteObject
+            Resource: !Sub
+              - arn:aws:s3:::login-gov-idp-doc-capture-${Environment}.${AccountId}-${Region}/*
+              - Environment: !Ref environment
+                AccountId: !Ref AWS::AccountId
+                Region: !Ref AWS::Region
+        - Statement:
+          - Sid: S3BucketAccess
+            Effect: Allow
+            Action:
+            - s3:ListBucket
+            Resource: !Sub
+              - arn:aws:s3:::login-gov-idp-doc-capture-${Environment}.${AccountId}-${Region}
+              - Environment: !Ref environment
+                AccountId: !Ref AWS::AccountId
+                Region: !Ref AWS::Region
+        - Statement:
+          - Sid: KMS
+            Effect: Allow
+            Action:
+              - kms:GenerateDataKey
+              - kms:Encrypt
+              - kms:DescribeKey
+              - kms:Decrypt
+            Resource: !Sub
+              - '{{resolve:ssm:/${Environment}/idp/doc-capture/kms/arn:1}}'
+              - Environment: !Ref environment
+        - Statement:
+          - Sid: SSMGet
+            Effect: Allow
+            Action:
+              - ssm:GetParameters
+              - ssm:GetParameter
+            Resource: !Join
+              - ''
+              - - 'arn:'
+                - !Ref AWS::Partition
+                - ':ssm:'
+                - !Ref AWS::Region
+                - ':'
+                - !Ref AWS::AccountId
+                - ':parameter/'
+                - !Ref environment
+                - '*'
+          - Sid: SSM
+            Effect: Allow
+            Action:
+              - ssm:DescribeParameters
+            Resource:
+              - "*"
+      VpcConfig:
+        SecurityGroupIds:
+          - !GetAtt ProofAddressSecurityGroup.GroupId
+        SubnetIds:
+          - !Sub
+              - '{{resolve:ssm:/${Environment}/network/subnet/private1/id:1}}'
+              - Environment: !Ref environment
+          -  !Sub
+              - '{{resolve:ssm:/${Environment}/network/subnet/private2/id:1}}'
+              - Environment: !Ref environment
+          - !Sub
+              - '{{resolve:ssm:/${Environment}/network/subnet/private3/id:1}}'
+              - Environment: !Ref environment
+      
+
+  ProofDocumentFunctionArn:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Type: String
+      Name: !Sub
+        - /${Environment}/idp/lambda/ProofDocument/arn
+        - Environment: !Ref environment
+      Value: !GetAtt ProofDocumentFunction.Arn
+
+  ProofDocumentSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      VpcId: !Sub
+        - '{{resolve:ssm:/${Environment}/network/vpc/id:1}}'
+        - Environment: !Ref environment
+      GroupDescription: Proof Document Lambda Function
+      SecurityGroupEgress:
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 3128
+          ToPort: 3128
+          CidrIp: 172.16.32.0/22
+
   # add all functions that need gitsha alias to this list
   ApplicationLambdaArns:
     Type: AWS::SSM::Parameter
@@ -189,6 +310,7 @@ Resources:
           - !GetAtt ProofAddressMockFunction.Arn
           - !GetAtt ProofResolutionFunction.Arn
           - !GetAtt ProofResolutionMockFunction.Arn
+          - !GetAtt ProofDocumentFunction.Arn
 
   ApplicationLambdaGitSha:
     Type: AWS::SSM::Parameter
