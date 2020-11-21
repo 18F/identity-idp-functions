@@ -94,7 +94,15 @@ commands:
     steps:
       - run: gem update --system
       - run: gem install bundler
-      - run: bundle install --path vendor/bundle
+      - restore_cache:
+          keys:
+            - v2-identity-idp-functions-bundle-{{ checksum "Gemfile" }}
+      - run: bundle config set path vendor/bundle
+      - run: bundle check || bundle install
+      - save_cache:
+          key: v2-identity-idp-functions-bundle-{{ checksum "Gemfile" }}
+          paths:
+            - vendor/bundle
 
   aws-cli-install:
     steps:
@@ -123,8 +131,17 @@ commands:
             aws configure set profile.prod.aws_secret_access_key $prod_AWS_SECRET_ACCESS_KEY
             aws configure set profile.prod.region $AWS_DEFAULT_REGION
 
+  generate-template-yaml:
+    steps:
+      - bundle-install
+      - run:
+          name: "Generate source/template.yaml"
+          command: |
+            ./bin/generate-template > source/template.yaml
+
   build-repo:
     steps:
+      - generate-template-yaml
       - run:
           name: "Validate SAM template"
           command: |

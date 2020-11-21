@@ -1,0 +1,46 @@
+#!/usr/bin/env ruby
+
+require 'bundler/setup'
+require 'identity-idp-functions'
+require 'erb'
+require 'active_support/core_ext/string/inflections'
+
+module IdentityIdpFunctions
+  # Generates source/template.yaml from ERB
+  class GenerateTemplate
+    attr_reader :out, :source
+
+    def initialize(out:, source: 'source/template.yaml.erb')
+      @out = out
+      @source = source
+    end
+
+    def run
+      template = File.read(source)
+      erb = ERB.new(template, trim_mode: '-')
+      out.puts do_not_edit_preamble
+      out.print erb.result(binding)
+    end
+
+    def do_not_edit_preamble
+      <<~EOS
+        # DO NOT MANUALLY EDIT THIS FILE
+        # INSTEAD:
+        # - EDIT template.yaml.erb
+        # - RUN bin/generate-template > source/template.yaml
+      EOS
+    end
+
+    # Detect lambda functions by looking for source/*/lib files
+    def functions
+      @functions ||= Dir["#{IdentityIdpFunctions.root_path}/source/*/lib"].sort.map do |lib_dir|
+        *_prefix, function, _lib = lib_dir.split('/')
+        function
+      end
+    end
+  end
+end
+
+if __FILE__ == $PROGRAM_NAME
+  IdentityIdpFunctions::GenerateTemplate.new(out: STDOUT).run
+end
