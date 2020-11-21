@@ -40,13 +40,13 @@ Globals:
     Runtime: ruby2.7
     Environment:
       Variables:
-        HTTP_PROXY: !Sub
+        http_proxy: !Sub
           - '{{resolve:ssm:/${Environment}/network/outboundproxy/url:1}}'
           - Environment: !Ref environment
-        HTTPS_PROXY: !Sub
+        https_proxy: !Sub
           - '{{resolve:ssm:/${Environment}/network/outboundproxy/url:1}}'
           - Environment: !Ref environment
-        NO_PROXY: !Sub
+        no_proxy: !Sub
           - '{{resolve:ssm:/${Environment}/network/outboundproxy/no_proxy:1}}'
           - Environment: !Ref environment
         ENVIRONMENT_NAME: !Ref environment
