@@ -61,7 +61,6 @@ RSpec.describe IdentityIdpFunctions::ProofDocument do
         },
       },
     }
-    allow(Aws::S3::Client).to receive(:new).and_return(s3_client)
     allow_any_instance_of(IdentityDocAuth::Acuant::Responses::GetResultsResponse).
       to receive(:pii_from_doc).and_return(applicant_pii)
   end
