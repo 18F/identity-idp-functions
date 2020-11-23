@@ -54,11 +54,13 @@ RSpec.describe IdentityIdpFunctions::ProofDocument do
     stub_request(:post, 'https://example.login.gov/api/callbacks/proof-document/:token').
       to_return(body: '')
 
-    s3_client = Aws::S3::Client.new(stub_responses: true)
-    s3_client.stub_responses(
-      :get_object,
-      body: "\xE9\x9F\x9C\x89g\xF4\x0E\x0E\x9BE\x00im\xBC{Ak\x9D\x96\x0FD",
-    )
+    Aws.config[:s3] = {
+      stub_responses: {
+        get_object: {
+          body: "\xE9\x9F\x9C\x89g\xF4\x0E\x0E\x9BE\x00im\xBC{Ak\x9D\x96\x0FD",
+        },
+      },
+    }
     allow(Aws::S3::Client).to receive(:new).and_return(s3_client)
     allow_any_instance_of(IdentityDocAuth::Acuant::Responses::GetResultsResponse).
       to receive(:pii_from_doc).and_return(applicant_pii)
