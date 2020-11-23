@@ -8,9 +8,9 @@ RSpec.describe IdentityIdpFunctions::ProofDocument do
   let(:event) do
     {
       encryption_key: '12345678901234567890123456789012',
-      front_image_iv: '1234567890123456',
-      back_image_iv: '1234567890123456',
-      selfie_image_iv: '1234567890123456',
+      front_image_iv: '123456789012',
+      back_image_iv: '123456789012',
+      selfie_image_iv: '123456789012',
       front_image_url: 'http://foo.com/bar1',
       back_image_url: 'http://foo.com/bar2',
       selfie_image_url: 'http://foo.com/bar3',
@@ -55,8 +55,9 @@ RSpec.describe IdentityIdpFunctions::ProofDocument do
       to_return(body: '')
 
     s3_client = Aws::S3::Client.new(stub_responses: true)
-    s3_client.stub_responses(:get_object,
-                             { body: "\xDE\x9E[\xF8\xB8\xABZ\xD2E\xA8\xC5`'\x18\xAF\xC7" })
+    s3_client.stub_responses(:get_object, {
+      body: "\xE9\x9F\x9C\x89g\xF4\x0E\x0E\x9BE\x00im\xBC{Ak\x9D\x96\x0FD"
+    })
     allow(Aws::S3::Client).to receive(:new).and_return(s3_client)
     allow_any_instance_of(IdentityDocAuth::Acuant::Responses::GetResultsResponse).
       to receive(:pii_from_doc).and_return(applicant_pii)

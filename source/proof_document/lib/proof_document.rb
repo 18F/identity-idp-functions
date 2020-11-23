@@ -122,12 +122,14 @@ module IdentityIdpFunctions
     end
 
     def decrypt(encrypted_image, iv)
-      cipher = OpenSSL::Cipher.new('aes-256-cbc')
+      cipher = OpenSSL::Cipher.new('aes-256-gcm')
       cipher.decrypt
       cipher.iv = iv
       cipher.key = encryption_key
+      cipher.auth_data = ''
+      cipher.auth_tag = encrypted_image[-16..-1]
 
-      cipher.update(encrypted_image) + cipher.final
+      cipher.update(encrypted_image[0..-17]) + cipher.final
     end
   end
 end
