@@ -42,9 +42,9 @@ RSpec.describe IdentityIdpFunctions::ProofDocumentMock do
 
   before do
     body = applicant_pii.to_json
-    encrypt_and_stub_s3(data: body, url: front_image_url, iv: front_image_iv, key: encryption_key)
-    encrypt_and_stub_s3(data: body, url: back_image_url, iv: back_image_iv, key: encryption_key)
-    encrypt_and_stub_s3(data: body, url: selfie_image_url, iv: selfie_image_iv, key: encryption_key)
+    encrypt_and_stub_s3(body: body, url: front_image_url, iv: front_image_iv, key: encryption_key)
+    encrypt_and_stub_s3(body: body, url: back_image_url, iv: back_image_iv, key: encryption_key)
+    encrypt_and_stub_s3(body: body, url: selfie_image_url, iv: selfie_image_iv, key: encryption_key)
   end
 
   describe '.handle' do
