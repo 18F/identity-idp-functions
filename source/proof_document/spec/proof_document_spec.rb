@@ -175,7 +175,19 @@ RSpec.describe IdentityIdpFunctions::ProofDocument do
       it_behaves_like 'callback url behavior'
 
       it 'logs the trace_id and timing info' do
-        expect(function).to receive(:log_event).with(hash_including(:timing, trace_id: trace_id))
+        expect(function).to receive(:log_event).with(
+          hash_including(
+            trace_id: trace_id,
+            timing: hash_including(
+              'decrypt.back' => kind_of(Float),
+              'decrypt.front' => kind_of(Float),
+              'decrypt.selfie' => kind_of(Float),
+              'download.back' => kind_of(Float),
+              'download.front' => kind_of(Float),
+              'download.selfie' => kind_of(Float),
+            )
+          )
+        )
 
         function.proof
       end
