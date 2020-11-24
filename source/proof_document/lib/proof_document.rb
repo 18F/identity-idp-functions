@@ -1,15 +1,15 @@
 require 'bundler/setup' if !defined?(Bundler)
+require 'aws-sdk-s3'
 require 'faraday'
 require 'json'
-require 'retries'
-require '/opt/ruby/lib/faraday_helper' if !defined?(IdentityIdpFunctions::FaradayHelper)
-require '/opt/ruby/lib/ssm_helper' if !defined?(IdentityIdpFunctions::SsmHelper)
 require 'openssl'
-require 'aws-sdk-s3'
+require 'retries'
+require '/opt/ruby/lib/function_helper' if !defined?(IdentityIdpFunctions::FunctionHelper)
 
 module IdentityIdpFunctions
   class ProofDocument
     include IdentityIdpFunctions::FaradayHelper
+    include IdentityIdpFunctions::LoggingHelper
 
     def self.handle(event:, context:, &callback_block) # rubocop:disable Lint/UnusedMethodArgument
       params = JSON.parse(event.to_json, symbolize_names: true)
@@ -18,7 +18,7 @@ module IdentityIdpFunctions
 
     attr_reader :encryption_key, :front_image_iv, :back_image_iv, :selfie_image_iv,
                 :front_image_url, :back_image_url, :selfie_image_url,
-                :liveness_checking_enabled, :callback_url
+                :liveness_checking_enabled, :callback_url, :trace_id, :timer
 
     def initialize(encryption_key:,
                    front_image_iv:,
@@ -28,7 +28,8 @@ module IdentityIdpFunctions
                    back_image_url:,
                    selfie_image_url:,
                    liveness_checking_enabled:,
-                   callback_url:)
+                   callback_url:,
+                   trace_id: nil)
       @encryption_key = encryption_key
       @front_image_iv = front_image_iv
       @back_image_iv = back_image_iv
@@ -38,17 +39,28 @@ module IdentityIdpFunctions
       @selfie_image_url = selfie_image_url
       @liveness_checking_enabled = liveness_checking_enabled
       @callback_url = callback_url
+      @trace_id = trace_id
+      @timer = IdentityIdpFunctions::Timer.new
     end
 
+    alias_method :liveness_checking_enabled?, :liveness_checking_enabled
+
     def proof(&callback_block) # rubocop:disable Lint/UnusedMethodArgument
-      proofer_result = with_retries(**faraday_retry_options) do
-        document_proofer.post_images(
-          front_image: decrypt_from_s3(front_image_url, front_image_iv),
-          back_image: decrypt_from_s3(back_image_url, back_image_iv),
-          selfie_image: \
-            liveness_checking_enabled ? decrypt_from_s3(selfie_image_url, selfie_image_iv) : '',
-          liveness_checking_enabled: liveness_checking_enabled,
-        )
+      front_image = decrypt_from_s3(:front, front_image_url, front_image_iv)
+      back_image = decrypt_from_s3(:back, back_image_url, back_image_iv)
+      selfie_image = if liveness_checking_enabled?
+                       decrypt_from_s3(:selfie, selfie_image_url, selfie_image_iv)
+                     end
+
+      proofer_result = timer.time('proof_documents') do
+        with_retries(**faraday_retry_options) do
+          document_proofer.post_images(
+            front_image: front_image,
+            back_image: back_image,
+            selfie_image: selfie_image || '',
+            liveness_checking_enabled: liveness_checking_enabled?,
+          )
+        end
       end
 
       result = proofer_result.to_h
@@ -62,8 +74,17 @@ module IdentityIdpFunctions
       if block_given?
         yield callback_body
       else
-        post_callback(callback_body: callback_body)
+        timer.time('callback') do
+          post_callback(callback_body: callback_body)
+        end
       end
+    ensure
+      log_event(
+        name: 'ProofDocument',
+        trace_id: trace_id,
+        success: proofer_result&.success?,
+        timing: timer.results,
+      )
     end
 
     def post_callback(callback_body:)
@@ -109,9 +130,9 @@ module IdentityIdpFunctions
       )
     end
 
-    def decrypt_from_s3(url, iv)
-      encrypted_image = fetch_file(url)
-      decrypt(encrypted_image, iv)
+    def decrypt_from_s3(name, url, iv)
+      encrypted_image = timer.time("download.#{name}") { fetch_file(url) }
+      timer.time("decrypt.#{name}") { decrypt(encrypted_image, iv) }
     end
 
     def fetch_file(url)

@@ -5,6 +5,7 @@ require 'identity_doc_auth'
 RSpec.describe IdentityIdpFunctions::ProofDocument do
   let(:idp_api_auth_token) { SecureRandom.hex }
   let(:callback_url) { 'https://example.login.gov/api/callbacks/proof-document/:token' }
+  let(:trace_id) { SecureRandom.uuid }
   let(:event) do
     {
       encryption_key: '12345678901234567890123456789012',
@@ -16,6 +17,7 @@ RSpec.describe IdentityIdpFunctions::ProofDocument do
       selfie_image_url: 'http://foo.com/bar3',
       liveness_checking_enabled: true,
       callback_url: callback_url,
+      trace_id: trace_id,
     }
   end
   let(:applicant_pii) do
@@ -134,7 +136,7 @@ RSpec.describe IdentityIdpFunctions::ProofDocument do
 
   describe '#proof' do
     subject(:function) do
-      IdentityIdpFunctions::ProofDocument.new(event)
+      IdentityIdpFunctions::ProofDocument.new(**event)
     end
 
     let(:document_proofer) { instance_double(IdentityDocAuth::Acuant::AcuantClient) }
@@ -156,6 +158,14 @@ RSpec.describe IdentityIdpFunctions::ProofDocument do
         function.proof
 
         expect(WebMock).to have_requested(:post, callback_url)
+      end
+
+      it_behaves_like 'callback url behavior'
+
+      it 'logs the trace_id and timing info' do
+        expect(function).to receive(:log_event).with(hash_including(:timing, trace_id: trace_id))
+
+        function.proof
       end
     end
 

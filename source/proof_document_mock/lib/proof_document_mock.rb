@@ -4,12 +4,12 @@ require 'json'
 require 'proofer'
 require 'retries'
 require_relative 'document_mock_client'
-require '/opt/ruby/lib/faraday_helper' if !defined?(IdentityIdpFunctions::FaradayHelper)
-require '/opt/ruby/lib/ssm_helper' if !defined?(IdentityIdpFunctions::SsmHelper)
+require '/opt/ruby/lib/function_helper' if !defined?(IdentityIdpFunctions::FunctionHelper)
 
 module IdentityIdpFunctions
   class ProofDocumentMock
     include IdentityIdpFunctions::FaradayHelper
+    include IdentityIdpFunctions::LoggingHelper
 
     def self.handle(event:, context:, &callback_block) # rubocop:disable Lint/UnusedMethodArgument
       params = JSON.parse(event.to_json, symbolize_names: true)
@@ -18,7 +18,7 @@ module IdentityIdpFunctions
 
     attr_reader :encryption_key, :front_image_iv, :back_image_iv, :selfie_image_iv,
                 :front_image_url, :back_image_url, :selfie_image_url,
-                :liveness_checking_enabled, :callback_url
+                :liveness_checking_enabled, :callback_url, :trace_id, :timer
 
     def initialize(encryption_key:,
                    front_image_iv:,
@@ -28,7 +28,8 @@ module IdentityIdpFunctions
                    back_image_url:,
                    selfie_image_url:,
                    liveness_checking_enabled:,
-                   callback_url:)
+                   callback_url:,
+                   trace_id: nil)
       @callback_url = callback_url
       @encryption_key = encryption_key
       @front_image_iv = front_image_iv
@@ -39,21 +40,25 @@ module IdentityIdpFunctions
       @selfie_image_url = selfie_image_url
       @liveness_checking_enabled = liveness_checking_enabled
       @callback_url = callback_url
+      @trace_id = trace_id
+      @timer = IdentityIdpFunctions::Timer.new
     end
 
     def proof(&callback_block) # rubocop:disable Lint/UnusedMethodArgument
-      proofer_result = with_retries(**faraday_retry_options) do
-        mock_proofer.proof(
-          encryption_key: encryption_key,
-          front_image_iv: front_image_iv,
-          back_image_iv: back_image_iv,
-          selfie_image_iv: selfie_image_iv,
-          front_image_url: front_image_url,
-          back_image_url: back_image_url,
-          selfie_image_url: selfie_image_url,
-          liveness_checking_enabled: liveness_checking_enabled,
-          callback_url: callback_url,
-        )
+      proofer_result = timer.time('proof_documents') do
+        with_retries(**faraday_retry_options) do
+          mock_proofer.proof(
+            encryption_key: encryption_key,
+            front_image_iv: front_image_iv,
+            back_image_iv: back_image_iv,
+            selfie_image_iv: selfie_image_iv,
+            front_image_url: front_image_url,
+            back_image_url: back_image_url,
+            selfie_image_url: selfie_image_url,
+            liveness_checking_enabled: liveness_checking_enabled,
+            callback_url: callback_url,
+          )
+        end
       end
 
       result = proofer_result.to_h
@@ -70,8 +75,17 @@ module IdentityIdpFunctions
       if block_given?
         yield callback_body
       else
-        post_callback(callback_body: callback_body)
+        timer.time('callback') do
+          post_callback(callback_body: callback_body)
+        end
       end
+    ensure
+      log_event(
+        name: 'ProofDocumentMock',
+        trace_id: trace_id,
+        success: proofer_result&.success?,
+        timing: timer.results,
+      )
     end
 
     def post_callback(callback_body:)

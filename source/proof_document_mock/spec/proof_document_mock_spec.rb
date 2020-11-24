@@ -4,6 +4,7 @@ require 'identity-idp-functions/proof_document_mock'
 RSpec.describe IdentityIdpFunctions::ProofDocumentMock do
   let(:idp_api_auth_token) { SecureRandom.hex }
   let(:callback_url) { 'https://example.login.gov/api/callbacks/proof-document/:token' }
+  let(:trace_id) { SecureRandom.uuid }
   let(:applicant_pii) do
     {
       first_name: 'Johnny',
@@ -55,6 +56,7 @@ RSpec.describe IdentityIdpFunctions::ProofDocumentMock do
         back_image_url: 'http://foo.com/bar2',
         selfie_image_url: 'http://foo.com/bar3',
         liveness_checking_enabled: true,
+        trace_id: trace_id,
       }
     end
 
@@ -102,6 +104,7 @@ RSpec.describe IdentityIdpFunctions::ProofDocumentMock do
         back_image_url: 'http://foo.com/bar2',
         selfie_image_url: 'http://foo.com/bar3',
         liveness_checking_enabled: true,
+        trace_id: trace_id,
       )
     end
 
@@ -120,6 +123,14 @@ RSpec.describe IdentityIdpFunctions::ProofDocumentMock do
         function.proof
 
         expect(WebMock).to have_requested(:post, callback_url)
+      end
+
+      it_behaves_like 'callback url behavior'
+
+      it 'logs the trace_id and timing info' do
+        expect(function).to receive(:log_event).with(hash_including(:timing, trace_id: trace_id))
+
+        function.proof
       end
     end
 
