@@ -1,8 +1,7 @@
 require 'bundler/setup' if !defined?(Bundler)
-require 'aws-sdk-s3'
 require 'faraday'
+require 'identity-doc-auth'
 require 'json'
-require 'openssl'
 require 'retries'
 require '/opt/ruby/lib/function_helper' if !defined?(IdentityIdpFunctions::FunctionHelper)
 
@@ -19,6 +18,8 @@ module IdentityIdpFunctions
     attr_reader :encryption_key, :front_image_iv, :back_image_iv, :selfie_image_iv,
                 :front_image_url, :back_image_url, :selfie_image_url,
                 :liveness_checking_enabled, :callback_url, :trace_id, :timer
+
+    alias_method :liveness_checking_enabled?, :liveness_checking_enabled
 
     def initialize(encryption_key:,
                    front_image_iv:,
@@ -43,9 +44,7 @@ module IdentityIdpFunctions
       @timer = IdentityIdpFunctions::Timer.new
     end
 
-    alias_method :liveness_checking_enabled?, :liveness_checking_enabled
-
-    def proof(&callback_block) # rubocop:disable Lint/UnusedMethodArgument
+    def proof
       front_image = decrypt_from_s3(:front, front_image_url, front_image_iv)
       back_image = decrypt_from_s3(:back, back_image_url, back_image_iv)
       selfie_image = if liveness_checking_enabled?
@@ -54,7 +53,7 @@ module IdentityIdpFunctions
 
       proofer_result = timer.time('proof_documents') do
         with_retries(**faraday_retry_options) do
-          document_proofer.post_images(
+          doc_auth_client.post_images(
             front_image: front_image,
             back_image: back_image,
             selfie_image: selfie_image || '',
@@ -105,8 +104,8 @@ module IdentityIdpFunctions
       end
     end
 
-    def document_proofer
-      IdentityDocAuth::Acuant::AcuantClient.new(
+    def doc_auth_client
+      @doc_auth_client ||= IdentityDocAuth::Acuant::AcuantClient.new(
         assure_id_password: ssm_helper.load('acuant_assure_id_password'),
         assure_id_subscription_id: ssm_helper.load('acuant_assure_id_subscription_id'),
         assure_id_url: ssm_helper.load('acuant_assure_id_url'),
@@ -121,36 +120,19 @@ module IdentityIdpFunctions
       @ssm_helper ||= SsmHelper.new
     end
 
-    private
+    def encryption_helper
+      @encryption_helper ||= EncryptionHelper.new
+    end
 
-    def s3_client
-      @s3_client ||= Aws::S3::Client.new(
-        http_open_timeout: 5,
-        http_read_timeout: 5,
-      )
+    def s3_helper
+      @s3_helper ||= S3Helper.new
     end
 
     def decrypt_from_s3(name, url, iv)
-      encrypted_image = timer.time("download.#{name}") { fetch_file(url) }
-      timer.time("decrypt.#{name}") { decrypt(encrypted_image, iv) }
-    end
-
-    def fetch_file(url)
-      uri = URI.parse(url)
-      document_bucket = uri.host.gsub('.amazonaws.com', '')
-      resp = s3_client.get_object(bucket: document_bucket, key: uri.path[1..-1])
-      resp.body.read
-    end
-
-    def decrypt(encrypted_image, iv)
-      cipher = OpenSSL::Cipher.new('aes-256-gcm')
-      cipher.decrypt
-      cipher.iv = iv
-      cipher.key = encryption_key
-      cipher.auth_data = ''
-      cipher.auth_tag = encrypted_image[-16..-1]
-
-      cipher.update(encrypted_image[0..-17]) + cipher.final
+      encrypted_image = timer.time("download.#{name}") { s3_helper.download(url) }
+      timer.time("decrypt.#{name}") do
+        encryption_helper.decrypt(data: encrypted_image, iv: iv, key: encryption_key)
+      end
     end
   end
 end

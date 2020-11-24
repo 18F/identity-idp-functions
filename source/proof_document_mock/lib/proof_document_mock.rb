@@ -1,9 +1,9 @@
 require 'bundler/setup' if !defined?(Bundler)
 require 'faraday'
+require 'identity-doc-auth'
 require 'json'
 require 'proofer'
 require 'retries'
-require_relative 'document_mock_client'
 require '/opt/ruby/lib/function_helper' if !defined?(IdentityIdpFunctions::FunctionHelper)
 
 module IdentityIdpFunctions
@@ -19,6 +19,8 @@ module IdentityIdpFunctions
     attr_reader :encryption_key, :front_image_iv, :back_image_iv, :selfie_image_iv,
                 :front_image_url, :back_image_url, :selfie_image_url,
                 :liveness_checking_enabled, :callback_url, :trace_id, :timer
+
+    alias_method :liveness_checking_enabled?, :liveness_checking_enabled
 
     def initialize(encryption_key:,
                    front_image_iv:,
@@ -44,27 +46,25 @@ module IdentityIdpFunctions
       @timer = IdentityIdpFunctions::Timer.new
     end
 
-    def proof(&callback_block) # rubocop:disable Lint/UnusedMethodArgument
+    def proof
+      front_image = decrypt_from_s3(:front, front_image_url, front_image_iv)
+      back_image = decrypt_from_s3(:back, back_image_url, back_image_iv)
+      selfie_image = if liveness_checking_enabled?
+                       decrypt_from_s3(:selfie, selfie_image_url, selfie_image_iv)
+                     end
+
       proofer_result = timer.time('proof_documents') do
         with_retries(**faraday_retry_options) do
-          mock_proofer.proof(
-            encryption_key: encryption_key,
-            front_image_iv: front_image_iv,
-            back_image_iv: back_image_iv,
-            selfie_image_iv: selfie_image_iv,
-            front_image_url: front_image_url,
-            back_image_url: back_image_url,
-            selfie_image_url: selfie_image_url,
-            liveness_checking_enabled: liveness_checking_enabled,
-            callback_url: callback_url,
+          doc_auth_client.post_images(
+            front_image: front_image,
+            back_image: back_image,
+            selfie_image: selfie_image || '',
+            liveness_checking_enabled: liveness_checking_enabled?,
           )
         end
       end
 
       result = proofer_result.to_h
-      result[:context] = { stages: [
-        document: IdentityIdpFunctions::DocumentMockClient.vendor_name,
-      ] }
 
       result[:exception] = proofer_result.exception.inspect if proofer_result.exception
 
@@ -110,8 +110,23 @@ module IdentityIdpFunctions
       @ssm_helper ||= SsmHelper.new
     end
 
-    def mock_proofer
-      IdentityIdpFunctions::DocumentMockClient.new
+    def encryption_helper
+      @encryption_helper ||= EncryptionHelper.new
+    end
+
+    def s3_helper
+      @s3_helper ||= S3Helper.new
+    end
+
+    def doc_auth_client
+      @doc_auth_client ||= IdentityDocAuth::Mock::DocAuthMockClient.new
+    end
+
+    def decrypt_from_s3(name, url, iv)
+      encrypted_image = timer.time("download.#{name}") { s3_helper.download(url) }
+      timer.time("decrypt.#{name}") do
+        encryption_helper.decrypt(data: encrypted_image, iv: iv, key: encryption_key)
+      end
     end
   end
 end
