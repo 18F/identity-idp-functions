@@ -64,7 +64,7 @@ RSpec.describe IdentityIdpFunctions::ProofDocumentMock do
         expect(JSON.parse(request.body, symbolize_names: true)).to eq(
           document_result: IdentityDocAuth::Response.new(
             success: true,
-            extra: { billed: true, result: 'Passed' }
+            extra: { billed: true, result: 'Passed' },
           ).to_h,
         )
       end
@@ -87,7 +87,7 @@ RSpec.describe IdentityIdpFunctions::ProofDocumentMock do
         expect(yielded_result).to eq(
           document_result: IdentityDocAuth::Response.new(
             success: true,
-            extra: { billed: true, result: 'Passed' }
+            extra: { billed: true, result: 'Passed' },
           ).to_h,
         )
 

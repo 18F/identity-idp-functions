@@ -15,7 +15,7 @@ RSpec.describe IdentityIdpFunctions::S3Helper do
     it 'downloads by extracing prefix and bucket from s3 URLs' do
       Aws.config[:s3] = {
         stub_responses: {
-          get_object: ->(context) do
+          get_object: lambda do |context|
             expect(context.params[:key]).to eq(prefix)
             expect(context.params[:bucket]).to eq(bucket_name)
 

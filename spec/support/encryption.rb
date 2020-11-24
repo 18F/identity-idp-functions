@@ -6,7 +6,7 @@ def encrypt_and_stub_s3(body:, url:, iv:, key:)
 
   Aws.config[:s3] = {
     stub_responses: {
-      get_object: -> (context) do
+      get_object: lambda do |context|
         { body: @responses.fetch(context.params[:key]) }
       end,
     },

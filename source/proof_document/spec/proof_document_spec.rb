@@ -106,7 +106,7 @@ RSpec.describe IdentityIdpFunctions::ProofDocument do
               raw_alerts: [],
               result: 'Passed',
               success: true,
-              exception: nil
+              exception: nil,
             },
           )
         end
@@ -137,7 +137,7 @@ RSpec.describe IdentityIdpFunctions::ProofDocument do
             result: 'Passed',
             success: true,
             liveness_assessment: 'Live',
-            exception: nil
+            exception: nil,
           },
         )
 
@@ -185,8 +185,8 @@ RSpec.describe IdentityIdpFunctions::ProofDocument do
               'download.back' => kind_of(Float),
               'download.front' => kind_of(Float),
               'download.selfie' => kind_of(Float),
-            )
-          )
+            ),
+          ),
         )
 
         function.proof
