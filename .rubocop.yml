@@ -467,3 +467,7 @@ Style/GlobalVars:
   Enabled: true
   Exclude:
     - '**/spec/**'
+
+Style/Alias:
+  Enabled: true
+  EnforcedStyle: prefer_alias_method
