@@ -2,7 +2,6 @@ require 'bundler/setup' if !defined?(Bundler)
 require 'faraday'
 require 'identity-doc-auth'
 require 'json'
-require 'proofer'
 require 'retries'
 require '/opt/ruby/lib/function_helper' if !defined?(IdentityIdpFunctions::FunctionHelper)
 
