@@ -8,18 +8,27 @@ RSpec.describe IdentityIdpFunctions::ProofDocument do
   let(:trace_id) { SecureRandom.uuid }
   let(:event) do
     {
-      encryption_key: '12345678901234567890123456789012',
-      front_image_iv: '123456789012',
-      back_image_iv: '123456789012',
-      selfie_image_iv: '123456789012',
-      front_image_url: 'http://foo.com/bar1',
-      back_image_url: 'http://foo.com/bar2',
-      selfie_image_url: 'http://foo.com/bar3',
+      encryption_key: encryption_key,
+      front_image_iv: front_image_iv,
+      back_image_iv: back_image_iv,
+      selfie_image_iv: selfie_image_iv,
+      front_image_url: front_image_url,
+      back_image_url: back_image_url,
+      selfie_image_url: selfie_image_url,
       liveness_checking_enabled: true,
       callback_url: callback_url,
       trace_id: trace_id,
     }
   end
+
+  let(:encryption_key) { '12345678901234567890123456789012' }
+  let(:front_image_iv) { '123456789012' }
+  let(:back_image_iv) { '123456789012' }
+  let(:selfie_image_iv) { '123456789012' }
+  let(:front_image_url) { 'http://foo.com/bar1' }
+  let(:back_image_url) { 'http://foo.com/bar2' }
+  let(:selfie_image_url) { 'http://foo.com/bar3' }
+
   let(:applicant_pii) do
     {
       first_name: 'Johnny',
@@ -32,7 +41,6 @@ RSpec.describe IdentityIdpFunctions::ProofDocument do
   end
 
   before do
-    mock_ssm_helper('IDP_API_AUTH_TOKEN', idp_api_auth_token)
     mock_ssm_helper('acuant_assure_id_password', 'aaa')
     mock_ssm_helper('acuant_assure_id_subscription_id', 'aaa')
     mock_ssm_helper('acuant_assure_id_url', 'https://example.com')
@@ -89,14 +97,16 @@ RSpec.describe IdentityIdpFunctions::ProofDocument do
         ) do |request|
           expect(JSON.parse(request.body, symbolize_names: true)).to eq(
             document_result: {
-              acuant_error: { code: nil, message: nil }, billed: true, errors: {},
+              acuant_error: { code: nil, message: nil },
+              billed: true,
+              errors: {},
               liveness_assessment: 'Live',
               liveness_score: nil,
               match_score: nil,
               raw_alerts: [],
               result: 'Passed',
               success: true,
-              exception: nil
+              exception: nil,
             },
           )
         end
@@ -118,14 +128,16 @@ RSpec.describe IdentityIdpFunctions::ProofDocument do
 
         expect(yielded_result).to eq(
           document_result: {
-            acuant_error: { code: nil, message: nil }, billed: true, errors: {},
+            acuant_error: { code: nil, message: nil },
+            billed: true,
+            errors: {},
             liveness_score: nil,
             match_score: nil,
             raw_alerts: [],
             result: 'Passed',
             success: true,
             liveness_assessment: 'Live',
-            exception: nil
+            exception: nil,
           },
         )
 
@@ -139,10 +151,10 @@ RSpec.describe IdentityIdpFunctions::ProofDocument do
       IdentityIdpFunctions::ProofDocument.new(**event)
     end
 
-    let(:document_proofer) { instance_double(IdentityDocAuth::Acuant::AcuantClient) }
+    let(:doc_auth_client) { instance_double(IdentityDocAuth::Acuant::AcuantClient) }
 
     before do
-      allow(function).to receive(:document_proofer).and_return(document_proofer)
+      allow(function).to receive(:doc_auth_client).and_return(doc_auth_client)
 
       stub_request(:post, callback_url).
         with(headers: { 'X-API-AUTH-TOKEN' => idp_api_auth_token })
@@ -150,7 +162,7 @@ RSpec.describe IdentityIdpFunctions::ProofDocument do
 
     context 'with a successful response from the proofer' do
       before do
-        expect(document_proofer).to receive(:post_images).
+        expect(doc_auth_client).to receive(:post_images).
           and_return(IdentityDocAuth::Response.new(success: true))
       end
 
@@ -163,7 +175,19 @@ RSpec.describe IdentityIdpFunctions::ProofDocument do
       it_behaves_like 'callback url behavior'
 
       it 'logs the trace_id and timing info' do
-        expect(function).to receive(:log_event).with(hash_including(:timing, trace_id: trace_id))
+        expect(function).to receive(:log_event).with(
+          hash_including(
+            trace_id: trace_id,
+            timing: hash_including(
+              'decrypt.back' => kind_of(Float),
+              'decrypt.front' => kind_of(Float),
+              'decrypt.selfie' => kind_of(Float),
+              'download.back' => kind_of(Float),
+              'download.front' => kind_of(Float),
+              'download.selfie' => kind_of(Float),
+            ),
+          ),
+        )
 
         function.proof
       end
@@ -171,7 +195,7 @@ RSpec.describe IdentityIdpFunctions::ProofDocument do
 
     context 'with an unsuccessful response from the proofer' do
       before do
-        expect(document_proofer).to receive(:post_images).
+        expect(doc_auth_client).to receive(:post_images).
           and_return(IdentityDocAuth::Response.new(success: false, exception: RuntimeError.new))
       end
 
@@ -184,7 +208,7 @@ RSpec.describe IdentityIdpFunctions::ProofDocument do
 
     context 'with a connection error talking to the proofer' do
       before do
-        allow(document_proofer).to receive(:post_images).
+        allow(doc_auth_client).to receive(:post_images).
           and_raise(Faraday::ConnectionFailed.new('error')).
           and_raise(Faraday::ConnectionFailed.new('error')).
           and_raise(Faraday::ConnectionFailed.new('error'))
@@ -199,7 +223,7 @@ RSpec.describe IdentityIdpFunctions::ProofDocument do
 
     context 'with a connection error posting to the callback url' do
       before do
-        expect(document_proofer).to receive(:post_images).
+        expect(doc_auth_client).to receive(:post_images).
           and_return(IdentityDocAuth::Response.new(success: false))
 
         stub_request(:post, callback_url).

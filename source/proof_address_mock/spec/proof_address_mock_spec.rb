@@ -1,6 +1,5 @@
 require 'securerandom'
 require 'identity-idp-functions/proof_address_mock'
-require 'shared_examples_for_proofers'
 
 RSpec.describe IdentityIdpFunctions::ProofAddressMock do
   let(:idp_api_auth_token) { SecureRandom.hex }

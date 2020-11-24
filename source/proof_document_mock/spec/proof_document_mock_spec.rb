@@ -1,3 +1,4 @@
+require 'spec_helper'
 require 'securerandom'
 require 'identity-idp-functions/proof_document_mock'
 
@@ -16,6 +17,36 @@ RSpec.describe IdentityIdpFunctions::ProofDocumentMock do
     }
   end
 
+  let(:event) do
+    {
+      encryption_key: encryption_key,
+      front_image_iv: front_image_iv,
+      back_image_iv: back_image_iv,
+      selfie_image_iv: selfie_image_iv,
+      front_image_url: front_image_url,
+      back_image_url: back_image_url,
+      selfie_image_url: selfie_image_url,
+      liveness_checking_enabled: true,
+      callback_url: callback_url,
+      trace_id: trace_id,
+    }
+  end
+
+  let(:encryption_key) { '12345678901234567890123456789012' }
+  let(:front_image_iv) { '111111111111' }
+  let(:back_image_iv) { '222222222222' }
+  let(:selfie_image_iv) { '333333333333' }
+  let(:front_image_url) { 'http://foo.com/bar1' }
+  let(:back_image_url) { 'http://foo.com/bar2' }
+  let(:selfie_image_url) { 'http://foo.com/bar3' }
+
+  before do
+    body = applicant_pii.to_json
+    encrypt_and_stub_s3(body: body, url: front_image_url, iv: front_image_iv, key: encryption_key)
+    encrypt_and_stub_s3(body: body, url: back_image_url, iv: back_image_iv, key: encryption_key)
+    encrypt_and_stub_s3(body: body, url: selfie_image_url, iv: selfie_image_iv, key: encryption_key)
+  end
+
   describe '.handle' do
     before do
       stub_const(
@@ -31,40 +62,19 @@ RSpec.describe IdentityIdpFunctions::ProofDocumentMock do
           },
         ) do |request|
         expect(JSON.parse(request.body, symbolize_names: true)).to eq(
-          document_result: {
-            exception: nil,
-            errors: {},
-            messages: [],
+          document_result: IdentityDocAuth::Response.new(
             success: true,
-            timed_out: false,
-            context: { stages: [
-              { document: 'DocumentMock' },
-            ] },
-          },
+            extra: { billed: true, result: 'Passed' },
+          ).to_h,
         )
       end
     end
 
-    let(:event) do
-      {
-        callback_url: callback_url,
-        encryption_key: '12345678901234567890123456789012',
-        front_image_iv: '123456789012',
-        back_image_iv: '123456789012',
-        selfie_image_iv: '123456789012',
-        front_image_url: 'http://foo.com/bar1',
-        back_image_url: 'http://foo.com/bar2',
-        selfie_image_url: 'http://foo.com/bar3',
-        liveness_checking_enabled: true,
-        trace_id: trace_id,
-      }
-    end
-
-    xit 'runs' do
+    it 'runs' do
       IdentityIdpFunctions::ProofDocumentMock.handle(event: event, context: nil)
     end
 
-    xcontext 'when called with a block' do
+    context 'when called with a block' do
       it 'gives the results to the block instead of posting to the callback URL' do
         yielded_result = nil
         IdentityIdpFunctions::ProofDocumentMock.handle(
@@ -75,16 +85,10 @@ RSpec.describe IdentityIdpFunctions::ProofDocumentMock do
         end
 
         expect(yielded_result).to eq(
-          document_result: {
-            exception: nil,
-            errors: {},
-            messages: [],
+          document_result: IdentityDocAuth::Response.new(
             success: true,
-            timed_out: false,
-            context: { stages: [
-              { document: 'DocumentMock' },
-            ] },
-          },
+            extra: { billed: true, result: 'Passed' },
+          ).to_h,
         )
 
         expect(a_request(:post, callback_url)).to_not have_been_made
@@ -96,13 +100,13 @@ RSpec.describe IdentityIdpFunctions::ProofDocumentMock do
     subject(:function) do
       IdentityIdpFunctions::ProofDocumentMock.new(
         callback_url: callback_url,
-        encryption_key: '12345678901234567890123456789012',
-        front_image_iv: '123456789012',
-        back_image_iv: '123456789012',
-        selfie_image_iv: '123456789012',
-        front_image_url: 'http://foo.com/bar1',
-        back_image_url: 'http://foo.com/bar2',
-        selfie_image_url: 'http://foo.com/bar3',
+        encryption_key: encryption_key,
+        front_image_iv: front_image_iv,
+        back_image_iv: back_image_iv,
+        selfie_image_iv: selfie_image_iv,
+        front_image_url: front_image_url,
+        back_image_url: back_image_url,
+        selfie_image_url: selfie_image_url,
         liveness_checking_enabled: true,
         trace_id: trace_id,
       )
@@ -144,7 +148,7 @@ RSpec.describe IdentityIdpFunctions::ProofDocumentMock do
 
     context 'with a connection error talking to the proofer' do
       before do
-        allow(IdentityIdpFunctions::DocumentMockClient).to receive(:proof).
+        allow(function.doc_auth_client).to receive(:proof).
           and_raise(Faraday::ConnectionFailed.new('error')).
           and_raise(Faraday::ConnectionFailed.new('error')).
           and_raise(Faraday::ConnectionFailed.new('error'))

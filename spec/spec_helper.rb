@@ -6,6 +6,10 @@ require 'stringio'
 
 Retries.sleep_enabled = false
 
+Dir["#{__dir__}/support/*"].each do |support_file|
+  require File.expand_path(support_file)
+end
+
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure
   config.example_status_persistence_file_path = '.rspec_status'

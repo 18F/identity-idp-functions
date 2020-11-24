@@ -1,6 +1,5 @@
 require 'securerandom'
 require 'identity-idp-functions/proof_resolution'
-require 'shared_examples_for_proofers'
 
 RSpec.describe IdentityIdpFunctions::ProofResolution do
   let(:idp_api_auth_token) { SecureRandom.hex }
