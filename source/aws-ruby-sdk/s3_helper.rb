@@ -4,8 +4,13 @@ module IdentityIdpFunctions
   class S3Helper
     def download(url)
       uri = URI.parse(url)
-      bucket = uri.host.gsub('.amazonaws.com', '')
-      resp = s3_client.get_object(bucket: bucket, key: uri.path[1..-1])
+      if uri.host.start_with?('s3.')
+        _, bucket, key = uri.path.split('/')
+      else
+        bucket, *_rest = uri.host.split('.')
+        _, key, *_rest = uri.path.split('/')
+      end
+      resp = s3_client.get_object(bucket: bucket, key: key)
       resp.body.read.b
     end
 
