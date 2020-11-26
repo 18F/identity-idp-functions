@@ -2,6 +2,10 @@ require 'aws-sdk-s3'
 
 module IdentityIdpFunctions
   class S3Helper
+    def s3_url?(url)
+      URI.parse(url).host.split('.').include?('s3')
+    end
+
     def download(url)
       uri = URI.parse(url)
       if uri.host.start_with?('s3.')

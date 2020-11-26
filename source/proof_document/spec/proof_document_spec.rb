@@ -25,9 +25,9 @@ RSpec.describe IdentityIdpFunctions::ProofDocument do
   let(:front_image_iv) { '123456789012' }
   let(:back_image_iv) { '123456789012' }
   let(:selfie_image_iv) { '123456789012' }
-  let(:front_image_url) { 'http://foo.com/bar1' }
-  let(:back_image_url) { 'http://foo.com/bar2' }
-  let(:selfie_image_url) { 'http://foo.com/bar3' }
+  let(:front_image_url) { 'http://bucket.s3.amazonaws.com/bar1' }
+  let(:back_image_url) { 'http://bucket.s3.amazonaws.com/bar2' }
+  let(:selfie_image_url) { 'http://bucket.s3.amazonaws.com/bar3' }
 
   let(:applicant_pii) do
     {
