@@ -8,10 +8,10 @@ RSpec.describe IdentityIdpFunctions::ProofDocument do
   let(:trace_id) { SecureRandom.uuid }
   let(:event) do
     {
-      encryption_key: encryption_key,
-      front_image_iv: front_image_iv,
-      back_image_iv: back_image_iv,
-      selfie_image_iv: selfie_image_iv,
+      encryption_key: Base64.encode64(encryption_key),
+      front_image_iv: Base64.encode64(front_image_iv),
+      back_image_iv: Base64.encode64(back_image_iv),
+      selfie_image_iv: Base64.encode64(selfie_image_iv),
       front_image_url: front_image_url,
       back_image_url: back_image_url,
       selfie_image_url: selfie_image_url,

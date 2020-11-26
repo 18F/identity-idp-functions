@@ -1,4 +1,5 @@
 require 'bundler/setup' if !defined?(Bundler)
+require 'base64'
 require 'faraday'
 require 'identity-doc-auth'
 require 'json'
@@ -32,10 +33,10 @@ module IdentityIdpFunctions
                    callback_url:,
                    trace_id: nil)
       @callback_url = callback_url
-      @encryption_key = encryption_key
-      @front_image_iv = front_image_iv
-      @back_image_iv = back_image_iv
-      @selfie_image_iv = selfie_image_iv
+      @encryption_key = Base64.decode64(encryption_key.to_s)
+      @front_image_iv = Base64.decode64(front_image_iv.to_s)
+      @back_image_iv = Base64.decode64(back_image_iv.to_s)
+      @selfie_image_iv = Base64.decode64(selfie_image_iv.to_s)
       @front_image_url = front_image_url
       @back_image_url = back_image_url
       @selfie_image_url = selfie_image_url
