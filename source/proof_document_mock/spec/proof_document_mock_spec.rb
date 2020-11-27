@@ -195,15 +195,17 @@ RSpec.describe IdentityIdpFunctions::ProofDocumentMock do
       let(:selfie_image_url) { 'http://example.com/bar3' }
 
       before do
-        stub_request(:get, front_image_url).to_return(
-          body: encrypt(data: applicant_pii.to_json, key: encryption_key, iv: front_image_iv),
-        )
-        stub_request(:get, back_image_url).to_return(
-          body: encrypt(data: applicant_pii.to_json, key: encryption_key, iv: back_image_iv),
-        )
-        stub_request(:get, selfie_image_url).to_return(
-          body: encrypt(data: applicant_pii.to_json, key: encryption_key, iv: selfie_image_iv),
-        )
+        encryption_helper = IdentityIdpFunctions::EncryptionHelper.new
+
+        stub_request(:get, front_image_url).to_return(body: encryption_helper.encrypt(
+          data: applicant_pii.to_json, key: encryption_key, iv: front_image_iv,
+        ))
+        stub_request(:get, back_image_url).to_return(body: encryption_helper.encrypt(
+          data: applicant_pii.to_json, key: encryption_key, iv: back_image_iv,
+        ))
+        stub_request(:get, selfie_image_url).to_return(body: encryption_helper.encrypt(
+          data: applicant_pii.to_json, key: encryption_key, iv: selfie_image_iv,
+        ))
       end
 
       it 'still downloads and decrypts the content' do
