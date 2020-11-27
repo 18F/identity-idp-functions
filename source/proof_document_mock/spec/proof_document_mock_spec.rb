@@ -206,7 +206,7 @@ RSpec.describe IdentityIdpFunctions::ProofDocumentMock do
         )
       end
 
-      it 'still downloads and encrypts the content' do
+      it 'still downloads and decrypts the content' do
         function.proof
 
         expect(a_request(:get, front_image_url)).to have_been_made
