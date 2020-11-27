@@ -10,7 +10,7 @@ RSpec.describe IdentityIdpFunctions::EncryptionHelper do
     let(:plaintext) { 'the quick brown fox jumps over the lazy dog' }
 
     it 'decrypts data' do
-      encrypted = encrypt(data: plaintext, iv: iv, key: key)
+      encrypted = encryption_helper.encrypt(data: plaintext, iv: iv, key: key)
 
       expect(encryption_helper.decrypt(data: encrypted, iv: iv, key: key)).to eq(plaintext)
     end
