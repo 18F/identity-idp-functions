@@ -19,10 +19,10 @@ RSpec.describe IdentityIdpFunctions::ProofDocumentMock do
 
   let(:event) do
     {
-      encryption_key: encryption_key,
-      front_image_iv: front_image_iv,
-      back_image_iv: back_image_iv,
-      selfie_image_iv: selfie_image_iv,
+      encryption_key: Base64.encode64(encryption_key),
+      front_image_iv: Base64.encode64(front_image_iv),
+      back_image_iv: Base64.encode64(back_image_iv),
+      selfie_image_iv: Base64.encode64(selfie_image_iv),
       front_image_url: front_image_url,
       back_image_url: back_image_url,
       selfie_image_url: selfie_image_url,
@@ -33,12 +33,12 @@ RSpec.describe IdentityIdpFunctions::ProofDocumentMock do
   end
 
   let(:encryption_key) { '12345678901234567890123456789012' }
-  let(:front_image_iv) { '111111111111' }
-  let(:back_image_iv) { '222222222222' }
-  let(:selfie_image_iv) { '333333333333' }
-  let(:front_image_url) { 'http://foo.com/bar1' }
-  let(:back_image_url) { 'http://foo.com/bar2' }
-  let(:selfie_image_url) { 'http://foo.com/bar3' }
+  let(:front_image_iv) { SecureRandom.random_bytes(12) }
+  let(:back_image_iv) { SecureRandom.random_bytes(12) }
+  let(:selfie_image_iv) { SecureRandom.random_bytes(12) }
+  let(:front_image_url) { 'http://bucket.s3.amazonaws.com/bar1' }
+  let(:back_image_url) { 'http://bucket.s3.amazonaws.com/bar2' }
+  let(:selfie_image_url) { 'http://bucket.s3.amazonaws.com/bar3' }
 
   before do
     body = applicant_pii.to_json
@@ -100,10 +100,10 @@ RSpec.describe IdentityIdpFunctions::ProofDocumentMock do
     subject(:function) do
       IdentityIdpFunctions::ProofDocumentMock.new(
         callback_url: callback_url,
-        encryption_key: encryption_key,
-        front_image_iv: front_image_iv,
-        back_image_iv: back_image_iv,
-        selfie_image_iv: selfie_image_iv,
+        encryption_key: Base64.encode64(encryption_key),
+        front_image_iv: Base64.encode64(front_image_iv),
+        back_image_iv: Base64.encode64(back_image_iv),
+        selfie_image_iv: Base64.encode64(selfie_image_iv),
         front_image_url: front_image_url,
         back_image_url: back_image_url,
         selfie_image_url: selfie_image_url,
@@ -186,6 +186,34 @@ RSpec.describe IdentityIdpFunctions::ProofDocumentMock do
         function.proof
 
         expect(WebMock).to have_requested(:post, callback_url)
+      end
+    end
+
+    context 'with local image URLs instead of S3 URLs' do
+      let(:front_image_url) { 'http://example.com/bar1' }
+      let(:back_image_url) { 'http://example.com/bar2' }
+      let(:selfie_image_url) { 'http://example.com/bar3' }
+
+      before do
+        stub_request(:get, front_image_url).to_return(
+          body: encrypt(data: applicant_pii.to_json, key: encryption_key, iv: front_image_iv),
+        )
+        stub_request(:get, back_image_url).to_return(
+          body: encrypt(data: applicant_pii.to_json, key: encryption_key, iv: back_image_iv),
+        )
+        stub_request(:get, selfie_image_url).to_return(
+          body: encrypt(data: applicant_pii.to_json, key: encryption_key, iv: selfie_image_iv),
+        )
+      end
+
+      it 'still downloads and decrypts the content' do
+        function.proof
+
+        expect(a_request(:get, front_image_url)).to have_been_made
+        expect(a_request(:get, back_image_url)).to have_been_made
+        expect(a_request(:get, selfie_image_url)).to have_been_made
+
+        expect(a_request(:post, callback_url)).to have_been_made
       end
     end
   end

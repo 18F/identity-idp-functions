@@ -4,6 +4,32 @@ require 'securerandom'
 RSpec.describe IdentityIdpFunctions::S3Helper do
   subject(:s3_helper) { IdentityIdpFunctions::S3Helper.new }
 
+  describe '#s3_url?' do
+    subject(:s3_url?) { s3_helper.s3_url?(url) }
+
+    context 'with a subdomain bucket format url' do
+      let(:url) { 'https://s3.region-name.amazonaws.com/bucket/key' }
+      it { is_expected.to eq(true) }
+    end
+
+    context 'with a path bucket format url' do
+      let(:url) { 'https://bucket.s3.region-name.amazonaws.com/key' }
+      it { is_expected.to eq(true) }
+    end
+
+    context 'with a non-s3 url' do
+      let(:url) { 'https://example.com' }
+      it { is_expected.to eq(false) }
+    end
+
+    context 'with a non-s3 url that has an s3 subdomain' do
+      let(:url) { 'https://s3.example.com' }
+      it 'gets fooled and returns true' do
+        expect(s3_url?).to eq(true)
+      end
+    end
+  end
+
   describe '#download' do
     let(:bucket_name) { 'bucket123456' }
     let(:prefix) { SecureRandom.uuid }
