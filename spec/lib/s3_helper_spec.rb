@@ -9,12 +9,12 @@ RSpec.describe IdentityIdpFunctions::S3Helper do
 
     context 'with a subdomain bucket format url' do
       let(:url) { 'https://s3.region-name.amazonaws.com/bucket/key' }
-      it { is_expected.to eq(true)}
+      it { is_expected.to eq(true) }
     end
 
     context 'with a path bucket format url' do
       let(:url) { 'https://bucket.s3.region-name.amazonaws.com/key' }
-      it { is_expected.to eq(true)}
+      it { is_expected.to eq(true) }
     end
 
     context 'with a non-s3 url' do
