@@ -107,6 +107,7 @@ RSpec.describe IdentityIdpFunctions::ProofDocument do
               result: 'Passed',
               success: true,
               exception: nil,
+              pii_from_doc: applicant_pii,
             },
           )
         end
@@ -138,6 +139,7 @@ RSpec.describe IdentityIdpFunctions::ProofDocument do
             success: true,
             liveness_assessment: 'Live',
             exception: nil,
+            pii_from_doc: applicant_pii,
           },
         )
 

@@ -41,7 +41,7 @@ RSpec.describe IdentityIdpFunctions::ProofDocumentMock do
   let(:selfie_image_url) { 'http://bucket.s3.amazonaws.com/bar3' }
 
   before do
-    body = applicant_pii.to_json
+    body = { document: applicant_pii }.to_json
     encrypt_and_stub_s3(body: body, url: front_image_url, iv: front_image_iv, key: encryption_key)
     encrypt_and_stub_s3(body: body, url: back_image_url, iv: back_image_iv, key: encryption_key)
     encrypt_and_stub_s3(body: body, url: selfie_image_url, iv: selfie_image_iv, key: encryption_key)
@@ -62,10 +62,14 @@ RSpec.describe IdentityIdpFunctions::ProofDocumentMock do
           },
         ) do |request|
         expect(JSON.parse(request.body, symbolize_names: true)).to eq(
-          document_result: IdentityDocAuth::Response.new(
+          document_result: {
+            billed: true,
+            errors: {},
+            exception: nil,
+            pii_from_doc: applicant_pii,
+            result: 'Passed',
             success: true,
-            extra: { billed: true, result: 'Passed' },
-          ).to_h,
+          },
         )
       end
     end
@@ -85,10 +89,14 @@ RSpec.describe IdentityIdpFunctions::ProofDocumentMock do
         end
 
         expect(yielded_result).to eq(
-          document_result: IdentityDocAuth::Response.new(
+          document_result: {
+            billed: true,
+            errors: {},
+            exception: nil,
+            pii_from_doc: applicant_pii,
+            result: 'Passed',
             success: true,
-            extra: { billed: true, result: 'Passed' },
-          ).to_h,
+          },
         )
 
         expect(a_request(:post, callback_url)).to_not have_been_made
@@ -195,15 +203,14 @@ RSpec.describe IdentityIdpFunctions::ProofDocumentMock do
       let(:selfie_image_url) { 'http://example.com/bar3' }
 
       before do
-        stub_request(:get, front_image_url).to_return(
-          body: encrypt(data: applicant_pii.to_json, key: encryption_key, iv: front_image_iv),
-        )
-        stub_request(:get, back_image_url).to_return(
-          body: encrypt(data: applicant_pii.to_json, key: encryption_key, iv: back_image_iv),
-        )
-        stub_request(:get, selfie_image_url).to_return(
-          body: encrypt(data: applicant_pii.to_json, key: encryption_key, iv: selfie_image_iv),
-        )
+        data = { document: applicant_pii }.to_json
+
+        stub_request(:get, front_image_url).
+          to_return(body: encrypt(data: data, key: encryption_key, iv: front_image_iv))
+        stub_request(:get, back_image_url).
+          to_return(body: encrypt(data: data, key: encryption_key, iv: back_image_iv))
+        stub_request(:get, selfie_image_url).
+          to_return(body: encrypt(data: data, key: encryption_key, iv: selfie_image_iv))
       end
 
       it 'still downloads and decrypts the content' do
