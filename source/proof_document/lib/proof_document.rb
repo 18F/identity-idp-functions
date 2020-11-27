@@ -63,7 +63,8 @@ module IdentityIdpFunctions
         end
       end
 
-      result = proofer_result.to_h
+      # pii_from_doc is excluded from to_h to prevent accidental logging
+      result = proofer_result.to_h.merge(pii_from_doc: proofer_result.pii_from_doc)
 
       result[:exception] = proofer_result.exception.inspect if proofer_result.exception
 
