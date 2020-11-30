@@ -1,5 +1,3 @@
-require 'aws-sdk-s3'
-
 module IdentityIdpFunctions
   class S3Helper
     def s3_url?(url)
@@ -19,6 +17,8 @@ module IdentityIdpFunctions
     end
 
     def s3_client
+      require 'aws-sdk-s3'
+
       @s3_client ||= Aws::S3::Client.new(
         http_open_timeout: 5,
         http_read_timeout: 5,
