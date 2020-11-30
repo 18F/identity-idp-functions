@@ -27,7 +27,7 @@ module IdentityIdpFunctions
     def build_cipher
       require 'openssl'
 
-      cipher = OpenSSL::Cipher.new('aes-256-gcm')
+      OpenSSL::Cipher.new('aes-256-gcm')
     end
   end
 end
