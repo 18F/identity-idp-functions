@@ -1,9 +1,7 @@
-require 'openssl'
-
 module IdentityIdpFunctions
   class EncryptionHelper
     def decrypt(data:, iv:, key:)
-      cipher = OpenSSL::Cipher.new('aes-256-gcm')
+      cipher = build_cipher
       cipher.decrypt
       cipher.iv = iv
       cipher.key = key
@@ -14,7 +12,7 @@ module IdentityIdpFunctions
     end
 
     def encrypt(data:, iv:, key:)
-      cipher = OpenSSL::Cipher.new('aes-256-gcm')
+      cipher = build_cipher
       cipher.encrypt
       cipher.iv = iv
       cipher.key = key
@@ -24,6 +22,12 @@ module IdentityIdpFunctions
       tag = cipher.auth_tag # produces 16 bytes tag by default
 
       encrypted + tag
+    end
+
+    def build_cipher
+      require 'openssl'
+
+      cipher = OpenSSL::Cipher.new('aes-256-gcm')
     end
   end
 end
