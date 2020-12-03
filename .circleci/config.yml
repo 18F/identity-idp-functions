@@ -50,6 +50,7 @@ jobs:
       - aws-cli-configure
       - checkout
       - build-repo
+      - copy-to-s3
 
   build-package-copy:
     executor: aws
