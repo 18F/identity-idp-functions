@@ -202,6 +202,23 @@ Resources:
           FromPort: 3128
           ToPort: 3128
           CidrIp: 172.16.32.0/22
+  <%= function.camelize %>Alarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmActions:
+        - !Sub
+          - '{{resolve:ssm:/account/${Region}/alert/sns/arn:1}}'
+          - Region: !Ref AWS::Region
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Dimensions: 
+        - Name: FunctionName
+          Value: !Ref <%= function.camelize %>Function
+      EvaluationPeriods: 1
+      MetricName: Errors
+      Namespace: AWS/Lambda
+      Period: 60
+      Statistic: Sum
+      Threshold: 1
 <% end %>
   AWSRubySDKLayer:
     Type: "AWS::Serverless::LayerVersion"
