@@ -207,8 +207,9 @@ Resources:
     Properties:
       AlarmActions:
         - !Sub
-          - '{{resolve:ssm:/account/${Region}/alert/sns/arn:1}}'
+          - arn:aws:sns:${Region}:${AccountId}:slack-otherevents
           - Region: !Ref AWS::Region
+            AccountId: !Ref AWS::AccountId
       ComparisonOperator: GreaterThanOrEqualToThreshold
       Dimensions: 
         - Name: FunctionName
