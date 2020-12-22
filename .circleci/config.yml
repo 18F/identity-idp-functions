@@ -14,7 +14,7 @@ workflows:
           filters:
             branches:
               ignore:
-                - master
+                - main
           requires:
             - build-specs
           context:
@@ -24,7 +24,7 @@ workflows:
           filters:
             branches:
               only:
-                - master
+                - main
           requires:
             - build-specs
           context:
