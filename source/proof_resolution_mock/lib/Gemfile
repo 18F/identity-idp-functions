@@ -1,8 +1,0 @@
-source 'https://rubygems.org'
-
-ruby '~> 2.7.0'
-
-gem 'aws-sdk-ssm', '~> 1.55'
-gem 'faraday'
-gem 'proofer', github: '18F/identity-proofer-gem', tag: 'v2.7.0'
-gem 'retries'
