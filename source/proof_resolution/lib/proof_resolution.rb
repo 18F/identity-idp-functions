@@ -41,6 +41,7 @@ module IdentityIdpFunctions
       resolution_success = proofer_result.success?
 
       result[:context] = { stages: [resolution: LexisNexis::InstantVerify::Proofer.vendor_name] }
+      result[:transaction_id] = proofer_result.transaction_id
 
       result[:timed_out] = proofer_result.timed_out?
       result[:exception] = proofer_result.exception.inspect if proofer_result.exception
