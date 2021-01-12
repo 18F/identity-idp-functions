@@ -77,6 +77,23 @@ Resources:
         - /${Environment}/idp/lambda/gitsha
         - Environment: !Ref environment
       Value: !Ref gitsha
+  
+  DocAuthSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      VpcId: !Sub
+        - '{{resolve:ssm:/${Environment}/network/vpc/id:1}}'
+        - Environment: !Ref environment
+      GroupDescription: DocAuth Lambda Function
+      SecurityGroupEgress:
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 172.16.32.0/22
+        - IpProtocol: tcp
+          FromPort: 3128
+          ToPort: 3128
+          CidrIp: 172.16.32.0/22
 
 <% functions.each do |function| %>
   <%= function.camelize %>Function:
@@ -94,6 +111,7 @@ Resources:
       VersionDescription: !Ref gitsha
       Layers:
         - !Ref AWSRubySDKLayer
+        - !Sub "arn:aws:lambda:${AWS::Region}:580247275435:layer:LambdaInsightsExtension:12"
       Environment:
         Variables:
           S3_BUCKET_NAME: !Sub
@@ -104,7 +122,9 @@ Resources:
           KMS_KEY_ALIAS: !Sub
             - ${Environment}-idp-doc-capture
             - Environment: !Ref environment
+      Tracing: Active
       Policies:
+        - CloudWatchLambdaInsightsExecutionRolePolicy
         - Statement:
           - Sid: S3ObjectAccess
             Effect: Allow
@@ -163,7 +183,7 @@ Resources:
               - "*"
       VpcConfig:
         SecurityGroupIds:
-          - !GetAtt <%= function.camelize %>SecurityGroup.GroupId
+          - !GetAtt DocAuthSecurityGroup.GroupId
         SubnetIds:
           - !Sub
               - '{{resolve:ssm:/${Environment}/network/subnet/private1/id:1}}'
@@ -186,22 +206,6 @@ Resources:
         - Environment: !Ref environment
       Value: !GetAtt <%= function.camelize %>Function.Arn
 
-  <%= function.camelize %>SecurityGroup:
-    Type: AWS::EC2::SecurityGroup
-    Properties:
-      VpcId: !Sub
-        - '{{resolve:ssm:/${Environment}/network/vpc/id:1}}'
-        - Environment: !Ref environment
-      GroupDescription: <%= function.titleize %> Lambda Function
-      SecurityGroupEgress:
-        - IpProtocol: tcp
-          FromPort: 443
-          ToPort: 443
-          CidrIp: 0.0.0.0/0
-        - IpProtocol: tcp
-          FromPort: 3128
-          ToPort: 3128
-          CidrIp: 172.16.32.0/22
   <%= function.camelize %>Alarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
