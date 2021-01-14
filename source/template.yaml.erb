@@ -110,7 +110,6 @@ Resources:
         Type: AllAtOnce
       VersionDescription: !Ref gitsha
       Layers:
-        - !Sub "arn:aws:lambda:${AWS::Region}:580247275435:layer:LambdaInsightsExtension:12"
         - !Ref AWSRubySDKLayer
       Environment:
         Variables:
