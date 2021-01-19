@@ -121,7 +121,6 @@ Resources:
           KMS_KEY_ALIAS: !Sub
             - ${Environment}-idp-doc-capture
             - Environment: !Ref environment
-      Tracing: Active
       Policies:
         - CloudWatchLambdaInsightsExecutionRolePolicy
         - Statement:
