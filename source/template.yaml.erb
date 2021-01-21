@@ -235,7 +235,7 @@ Resources:
         - ruby2.7
       RetentionPolicy: Retain
     Metadata:
-      BuildMethod: ruby2.7
+      BuildMethod: makefile
 
 Outputs:<% functions.each do |function| %>
   <%= function.camelize %>Function:
