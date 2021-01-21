@@ -1,4 +1,4 @@
-build-RubyLayer:
+build-AWSRubySDKLayer:
 	bundle install --path=$(ARTIFACTS_DIR)
 	rm -rf $(ARTIFACTS_DIR)/ruby/2.7.0/cache && rm -rf $(ARTIFACTS_DIR)/ruby/2.7.0/bin
 	mkdir $(ARTIFACTS_DIR)/ruby/gems
