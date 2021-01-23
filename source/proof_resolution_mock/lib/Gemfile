@@ -4,5 +4,5 @@ ruby '~> 2.7.0'
 
 gem 'aws-sdk-ssm', '~> 1.55'
 gem 'faraday'
-gem 'proofer', git: 'https://github.com/18F/identity-proofer-gem.git', ref: 'd64adb3'
+gem 'proofer', github: '18F/identity-proofer-gem', tag: 'v2.7.1'
 gem 'retries'
