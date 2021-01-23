@@ -68,7 +68,7 @@ RSpec.describe IdentityIdpFunctions::ProofResolution do
               { resolution: LexisNexis::InstantVerify::Proofer.vendor_name },
               { state_id: Aamva::Proofer.vendor_name },
             ] },
-            transaction_id: '',
+            transaction_id: nil,
           },
         )
       end
@@ -110,7 +110,7 @@ RSpec.describe IdentityIdpFunctions::ProofResolution do
               { resolution: LexisNexis::InstantVerify::Proofer.vendor_name },
               { state_id: Aamva::Proofer.vendor_name },
             ] },
-            transaction_id: '',
+            transaction_id: nil,
           },
         )
 
