@@ -224,7 +224,7 @@ Resources:
       Threshold: 1
 <% end %>
   AWSRubySDKLayer:
-    Type: "AWS::Serverless::LayerVersion"
+    Type: AWS::Serverless::LayerVersion
     Properties:
       LayerName: !Sub
         - ${Environment}-idp-ruby-sdk

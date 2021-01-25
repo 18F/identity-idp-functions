@@ -10,7 +10,7 @@ module IdentityIdpFunctions
   class GenerateTemplate
     attr_reader :out, :source
 
-    def initialize(out:, source: 'source/template.yaml.erb')
+    def initialize(out:, source: 'template.yaml.erb')
       @out = out
       @source = source
     end
@@ -27,13 +27,13 @@ module IdentityIdpFunctions
         # DO NOT MANUALLY EDIT THIS FILE
         # INSTEAD:
         # - EDIT template.yaml.erb
-        # - RUN bin/generate-template > source/template.yaml
+        # - RUN bin/generate-template > template.yaml
       EOS
     end
 
     # Detect lambda functions by looking for source/*/lib files
     def functions
-      @functions ||= Dir["#{IdentityIdpFunctions.root_path}/source/*/lib"].sort.map do |lib_dir|
+      @functions ||= Dir["#{IdentityIdpFunctions.root_path}/*/lib"].sort.map do |lib_dir|
         *_prefix, function, _lib = lib_dir.split('/')
         function
       end

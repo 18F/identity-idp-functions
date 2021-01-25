@@ -92,9 +92,9 @@ commands:
     steps:
       - bundle-install
       - run:
-          name: "Generate source/template.yaml"
+          name: "Generate template.yaml"
           command: |
-            ./bin/generate-template > source/template.yaml
+            ./bin/generate-template > template.yaml
 
   build-repo:
     steps:
@@ -102,12 +102,10 @@ commands:
       - run:
           name: "Validate SAM template"
           command: |
-            cd source
             sam validate -t template.yaml --profile default --debug
       - run:
           name: "Build Functions"
           command: |
-            cd source
             sam build \
               --template template.yaml
       - run:
@@ -117,7 +115,6 @@ commands:
       - run:
           name: "Package Functions"
           command: |
-            cd source
             sam package \
               --profile default \
               --debug \
@@ -134,7 +131,6 @@ commands:
       - run:
           name: "Copy packages to S3"
           command: |
-            cd source
             aws s3 cp identity-idp-functions.template.yaml s3://$DEPLOY_S3_BUCKET/circleci/identity-idp-functions/$CIRCLE_BRANCH/
             aws s3 cp identity-idp-functions.zip s3://$DEPLOY_S3_BUCKET/circleci/identity-idp-functions/$CIRCLE_BRANCH/
 
@@ -143,7 +139,6 @@ commands:
       - run:
           name: "Copy packages to S3 prod"
           command: |
-            cd source
             aws s3 cp identity-idp-functions.template.yaml s3://$prod_DEPLOY_S3_BUCKET/circleci/identity-idp-functions/$CIRCLE_BRANCH/ --profile prod
             aws s3 cp identity-idp-functions.zip s3://$prod_DEPLOY_S3_BUCKET/circleci/identity-idp-functions/$CIRCLE_BRANCH/ --profile prod
 
