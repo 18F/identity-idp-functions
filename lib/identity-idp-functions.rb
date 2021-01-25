@@ -9,11 +9,11 @@ module IdentityIdpFunctions
   # Helper for building a ruby require path for
   # "source/$function_name/lib/$function_name.rb"
   def function_path(function_name)
-    File.expand_path(File.join(root_path, 'source', function_name, 'lib', "#{function_name}.rb"))
+    File.expand_path(File.join(root_path, function_name, 'lib', "#{function_name}.rb"))
   end
 
   def helper_path(helper_name)
-    File.expand_path(File.join(root_path, 'source', 'aws-ruby-sdk', "#{helper_name}.rb"))
+    File.expand_path(File.join(root_path, 'aws-ruby-sdk', "#{helper_name}.rb"))
   end
 
   def root_path

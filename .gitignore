@@ -13,4 +13,4 @@
 /Gemfile.lock
 .aws-sam
 
-source/template.yaml # generated from bin/generate-template
+template.yaml # generated from bin/generate-template
