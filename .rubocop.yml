@@ -34,7 +34,7 @@ Metrics/BlockLength:
     - 'Rakefile'
     - '**/*.rake'
     - 'spec/**/*.rb'
-    - 'source/**/*_spec.rb'
+    - '**/*_spec.rb'
 
 Metrics/ClassLength:
   Description: Avoid classes longer than 100 lines of code.
