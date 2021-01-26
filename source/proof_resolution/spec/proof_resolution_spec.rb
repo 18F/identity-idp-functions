@@ -237,10 +237,10 @@ RSpec.describe IdentityIdpFunctions::ProofResolution do
         expect(WebMock).to(have_requested(:post, callback_url).with do |request|
           body = JSON.parse(request.body, symbolize_names: true)
 
-          expect(body.dig(:resolution_result, :context, :stages)).to eq([
+          expect(body.dig(:resolution_result, :context, :stages)).to eq [
             { state_id: 'aamva:state_id' },
             { resolution: 'lexisnexis:instant_verify' },
-          ])
+          ]
 
           expect(body.dig(:resolution_result, :transaction_id)).to eq(transaction_id)
         end)
