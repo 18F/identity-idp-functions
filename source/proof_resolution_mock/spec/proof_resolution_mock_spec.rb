@@ -98,12 +98,14 @@ RSpec.describe IdentityIdpFunctions::ProofResolutionMock do
 
   describe '#proof' do
     let(:should_proof_state_id) { true }
+    let(:dob_year_only) { false }
 
     subject(:function) do
       IdentityIdpFunctions::ProofResolutionMock.new(
         callback_url: callback_url,
         applicant_pii: applicant_pii,
         should_proof_state_id: should_proof_state_id,
+        dob_year_only: dob_year_only,
         trace_id: trace_id,
       )
     end
