@@ -123,6 +123,7 @@ RSpec.describe IdentityIdpFunctions::ProofResolution do
     let(:should_proof_state_id) { true }
     let(:lexisnexis_proofer) { instance_double(LexisNexis::InstantVerify::Proofer) }
     let(:aamva_proofer) { instance_double(Aamva::Proofer) }
+    let(:dob_year_only) { false }
 
     subject(:function) do
       IdentityIdpFunctions::ProofResolution.new(
@@ -130,6 +131,7 @@ RSpec.describe IdentityIdpFunctions::ProofResolution do
         applicant_pii: applicant_pii,
         should_proof_state_id: should_proof_state_id,
         trace_id: trace_id,
+        dob_year_only: dob_year_only,
       )
     end
 
@@ -201,6 +203,47 @@ RSpec.describe IdentityIdpFunctions::ProofResolution do
         function.proof
 
         expect(WebMock).to have_requested(:post, callback_url)
+      end
+    end
+
+    context 'checking DOB year only' do
+      let(:dob_year_only) { true }
+
+      it 'only sends the birth year to LexisNexis (extra applicant attribute)' do
+        expect(aamva_proofer).to receive(:proof).and_return(Proofer::Result.new)
+        expect(lexisnexis_proofer).to receive(:proof).
+          with(hash_including(dob_year_only: true)).
+          and_return(Proofer::Result.new)
+
+        function.proof
+      end
+
+      it 'does not check LexisNexis when AAMVA proofing does not match' do
+        expect(aamva_proofer).to receive(:proof).and_return(Proofer::Result.new(exception: 'error'))
+        expect(lexisnexis_proofer).to_not receive(:proof)
+
+        function.proof
+      end
+
+      it 'logs the correct context' do
+        transaction_id = SecureRandom.uuid
+
+        expect(aamva_proofer).to receive(:proof).and_return(Proofer::Result.new)
+        expect(lexisnexis_proofer).to receive(:proof).
+          and_return(Proofer::Result.new(transaction_id: transaction_id))
+
+        function.proof
+
+        expect(WebMock).to(have_requested(:post, callback_url).with do |request|
+          body = JSON.parse(request.body, symbolize_names: true)
+
+          expect(body.dig(:resolution_result, :context, :stages)).to eq [
+            { state_id: 'aamva:state_id' },
+            { resolution: 'lexisnexis:instant_verify' },
+          ]
+
+          expect(body.dig(:resolution_result, :transaction_id)).to eq(transaction_id)
+        end)
       end
     end
 

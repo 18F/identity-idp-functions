@@ -16,14 +16,29 @@ module IdentityIdpFunctions
       new(**params).proof(&callback_block)
     end
 
-    attr_reader :applicant_pii, :callback_url, :should_proof_state_id, :trace_id, :timer
+    attr_reader :applicant_pii, :callback_url, :trace_id, :timer
 
-    def initialize(applicant_pii:, callback_url:, should_proof_state_id:, trace_id: nil)
+    def initialize(
+      applicant_pii:,
+      callback_url:,
+      should_proof_state_id:,
+      dob_year_only: false,
+      trace_id: nil
+    )
       @applicant_pii = applicant_pii
       @callback_url = callback_url
       @should_proof_state_id = should_proof_state_id
+      @dob_year_only = dob_year_only
       @trace_id = trace_id
       @timer = IdentityIdpFunctions::Timer.new
+    end
+
+    def should_proof_state_id?
+      @should_proof_state_id
+    end
+
+    def dob_year_only?
+      @dob_year_only
     end
 
     def proof
@@ -46,7 +61,7 @@ module IdentityIdpFunctions
       result[:exception] = proofer_result.exception.inspect if proofer_result.exception
 
       state_id_success = nil
-      if should_proof_state_id && result[:success]
+      if should_proof_state_id? && result[:success]
         timer.time('state_id') do
           proof_state_id(result)
         end
