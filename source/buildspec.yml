@@ -30,7 +30,11 @@ phases:
       - |
         for i in $(echo $APPLICATION_FUNCTIONS | tr ',' '\n')
         do
-          version=$(aws lambda get-function --function-name $i:$ENVIRONMENT --query 'Configuration.Version' --output text)
-          echo $version
-          aws lambda create-alias --function-name $i --name $gitsha_segment --function-version $version
+          if aws lambda get-alias --function-name $i --name $gitsha_segment --output text --query 'FunctionVersion'; then
+            version=$(aws lambda get-function --function-name $i:$ENVIRONMENT --query 'Configuration.Version' --output text)
+            aws lambda update-alias --function-name $i --name $gitsha_segment --function-version $version
+          else
+            version=$(aws lambda get-function --function-name $i:$ENVIRONMENT --query 'Configuration.Version' --output text)
+            aws lambda create-alias --function-name $i --name $gitsha_segment --function-version $version
+          fi
         done

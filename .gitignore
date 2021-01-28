@@ -6,11 +6,13 @@
 /pkg/
 /spec/reports/
 /tmp/
+/vendor/
+/Gemfile.lock/
+/source/template.yml
+/source/template.yaml
 
 # rspec failure tracking
 .rspec_status
 
 /Gemfile.lock
 .aws-sam
-
-source/template.yaml # generated from bin/generate-template
