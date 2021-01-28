@@ -1,6 +1,6 @@
 require 'bundler/setup' if !defined?(Bundler)
 require 'base64'
-require 'faraday'
+gem 'faraday', '~> 1.1.0'
 require 'identity-doc-auth'
 require 'json'
 require 'retries'
