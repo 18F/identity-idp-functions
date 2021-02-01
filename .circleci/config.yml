@@ -65,7 +65,7 @@ jobs:
 commands:
   bundle-install:
     steps:
-      - run: gem update --system
+      - run: gem update --system --no-document
       - run: gem install bundler
       - run: bundle install --path vendor/bundle
 
@@ -159,3 +159,5 @@ commands:
       - run:
           name: Run rubocop
           command: bundle exec rubocop
+
+          
