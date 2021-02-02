@@ -221,6 +221,10 @@ Resources:
           FromPort: 3128
           ToPort: 3128
           CidrIp: 172.16.32.0/22
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 172.16.32.0/22
 
   DocAuthLayer:
     Type: "AWS::Serverless::LayerVersion"
