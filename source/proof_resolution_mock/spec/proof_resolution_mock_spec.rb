@@ -174,7 +174,7 @@ RSpec.describe IdentityIdpFunctions::ProofResolutionMock do
         expect(function.state_id_mock_proofer).to receive(:proof).
           and_return(Proofer::Result.new(exception: 'some error'))
 
-        resolution_result  = nil
+        resolution_result = nil
         function.proof do |response|
           resolution_result = response[:resolution_result]
         end

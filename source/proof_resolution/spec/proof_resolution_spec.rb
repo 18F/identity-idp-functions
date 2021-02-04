@@ -143,28 +143,28 @@ RSpec.describe IdentityIdpFunctions::ProofResolution do
             'Code' => 'invalid_transaction_initiate',
             'Description' => 'Error: Invalid Transaction Initiate',
             'DetailDescription' => [
-              { 'Text' => 'Date of Birth is not a valid date' }
-            ]
+              { 'Text' => 'Date of Birth is not a valid date' },
+            ],
           },
         }
       end
 
-    let(:expected_callback_response) do
-      {
-        resolution_result: {
-          exception: kind_of(String),
-          errors: {},
-          messages: [],
-          success: false,
-          timed_out: false,
-          context: { stages: [
-            { state_id: Aamva::Proofer.vendor_name },
-            { resolution: LexisNexis::InstantVerify::Proofer.vendor_name },
-          ] },
-          transaction_id: nil,
-        },
-      }
-    end
+      let(:expected_callback_response) do
+        {
+          resolution_result: {
+            exception: kind_of(String),
+            errors: {},
+            messages: [],
+            success: false,
+            timed_out: false,
+            context: { stages: [
+              { state_id: Aamva::Proofer.vendor_name },
+              { resolution: LexisNexis::InstantVerify::Proofer.vendor_name },
+            ] },
+            transaction_id: nil,
+          },
+        }
+      end
 
       it 'has a failed repsonse' do
         expect_any_instance_of(Aamva::Proofer).to receive(:proof).and_return(Proofer::Result.new)
