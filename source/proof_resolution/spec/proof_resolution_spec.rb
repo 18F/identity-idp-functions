@@ -43,9 +43,7 @@ RSpec.describe IdentityIdpFunctions::ProofResolution do
       stub_request(
         :post,
         'https://lexisnexis.example.com/restws/identity/v2/abc123/aaa/conversation',
-      ).to_return(
-        body: { 'Status' => { 'TransactionStatus' => 'passed' } }.to_json,
-      )
+      ).to_return(body: lexisnexis_response.to_json)
 
       stub_request(:post, Aamva::Request::VerificationRequest.verification_url).
         to_return(body: {}.to_json, status: 200)
@@ -57,29 +55,39 @@ RSpec.describe IdentityIdpFunctions::ProofResolution do
             'X-API-AUTH-TOKEN' => idp_api_auth_token,
           },
         ) do |request|
-        expect(JSON.parse(request.body, symbolize_names: true)).to eq(
-          resolution_result: {
-            exception: nil,
-            errors: {},
-            messages: [],
-            success: true,
-            timed_out: false,
-            context: { stages: [
-              { resolution: LexisNexis::InstantVerify::Proofer.vendor_name },
-              { state_id: Aamva::Proofer.vendor_name },
-            ] },
-            transaction_id: nil,
-          },
-        )
+        expect(JSON.parse(request.body, symbolize_names: true)).to match(expected_callback_response)
       end
     end
 
+    let(:lexisnexis_response) do
+      { 'Status' => { 'TransactionStatus' => 'passed' } }
+    end
+
+    let(:expected_callback_response) do
+      {
+        resolution_result: {
+          exception: nil,
+          errors: {},
+          messages: [],
+          success: true,
+          timed_out: false,
+          context: { stages: [
+            { resolution: LexisNexis::InstantVerify::Proofer.vendor_name },
+            { state_id: Aamva::Proofer.vendor_name },
+          ] },
+          transaction_id: nil,
+        },
+      }
+    end
+
+    let(:dob_year_only) { false }
     let(:event) do
       {
         callback_url: callback_url,
         should_proof_state_id: true,
         applicant_pii: applicant_pii,
         trace_id: trace_id,
+        dob_year_only: dob_year_only,
       }
     end
 
@@ -115,6 +123,52 @@ RSpec.describe IdentityIdpFunctions::ProofResolution do
         )
 
         expect(a_request(:post, callback_url)).to_not have_been_made
+      end
+    end
+
+    context 'dob_year_only, failed response from lexisnexis' do
+      let(:dob_year_only) { true }
+      let(:lexisnexis_response) do
+        {
+          'Status' => {
+            'CoversationId' => SecureRandom.hex,
+            'Workflow' => 'foobar.baz',
+            'TransactionStatus' => 'error',
+            'TransactionReasonCode' => {
+              'Code' => 'invalid_transaction_initiate',
+            },
+          },
+          'Information' => {
+            'InformationType' => 'error-details',
+            'Code' => 'invalid_transaction_initiate',
+            'Description' => 'Error: Invalid Transaction Initiate',
+            'DetailDescription' => [
+              { 'Text' => 'Date of Birth is not a valid date' },
+            ],
+          },
+        }
+      end
+
+      let(:expected_callback_response) do
+        {
+          resolution_result: {
+            exception: kind_of(String),
+            errors: {},
+            messages: [],
+            success: false,
+            timed_out: false,
+            context: { stages: [
+              { state_id: Aamva::Proofer.vendor_name },
+              { resolution: LexisNexis::InstantVerify::Proofer.vendor_name },
+            ] },
+            transaction_id: nil,
+          },
+        }
+      end
+
+      it 'has a failed repsonse' do
+        expect_any_instance_of(Aamva::Proofer).to receive(:proof).and_return(Proofer::Result.new)
+        IdentityIdpFunctions::ProofResolution.handle(event: event, context: nil)
       end
     end
   end

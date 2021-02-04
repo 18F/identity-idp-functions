@@ -96,7 +96,7 @@ module IdentityIdpFunctions
         state_id_mock_proofer.proof(applicant_pii)
       end
 
-      result.merge(proofer_result.to_h) do |key, orig, current|
+      result.merge!(proofer_result.to_h) do |key, orig, current|
         key == :messages ? orig + current : current
       end
 
@@ -119,11 +119,11 @@ module IdentityIdpFunctions
     end
 
     def resolution_mock_proofer
-      IdentityIdpFunctions::ResolutionMockClient.new
+      @resolution_mock_proofer ||= IdentityIdpFunctions::ResolutionMockClient.new
     end
 
     def state_id_mock_proofer
-      IdentityIdpFunctions::StateIdMockClient.new
+      @state_id_mock_proofer ||= IdentityIdpFunctions::StateIdMockClient.new
     end
 
     def api_auth_token
