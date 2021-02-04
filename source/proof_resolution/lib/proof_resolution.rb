@@ -138,7 +138,7 @@ module IdentityIdpFunctions
 
         resolution_success = lexisnexis_result.success?
 
-        result.merge(lexisnexis_result.to_h) do |key, orig, current|
+        result.merge!(lexisnexis_result.to_h) do |key, orig, current|
           key == :messages ? orig + current : current
         end
 
@@ -162,7 +162,7 @@ module IdentityIdpFunctions
         aamva_proofer.proof(applicant_pii)
       end
 
-      result.merge(proofer_result.to_h) do |key, orig, current|
+      result.merge!(proofer_result.to_h) do |key, orig, current|
         key == :messages ? orig + current : current
       end
 

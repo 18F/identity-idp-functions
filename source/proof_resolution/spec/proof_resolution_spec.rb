@@ -55,7 +55,7 @@ RSpec.describe IdentityIdpFunctions::ProofResolution do
             'X-API-AUTH-TOKEN' => idp_api_auth_token,
           },
         ) do |request|
-        expect(JSON.parse(request.body, symbolize_names: true)).to eq(expected_callback_response)
+        expect(JSON.parse(request.body, symbolize_names: true)).to match(expected_callback_response)
       end
     end
 
@@ -159,6 +159,7 @@ RSpec.describe IdentityIdpFunctions::ProofResolution do
           timed_out: false,
           context: { stages: [
             { state_id: Aamva::Proofer.vendor_name },
+            { resolution: LexisNexis::InstantVerify::Proofer.vendor_name },
           ] },
           transaction_id: nil,
         },

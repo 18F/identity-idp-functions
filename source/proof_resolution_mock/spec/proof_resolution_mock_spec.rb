@@ -156,7 +156,7 @@ RSpec.describe IdentityIdpFunctions::ProofResolutionMock do
       let(:should_proof_state_id) { false }
 
       it 'does not call state_id proof if resolution proof is successful' do
-        expect_any_instance_of(IdentityIdpFunctions::StateIdMockClient).not_to receive(:proof)
+        expect(function.state_id_mock_proofer).not_to receive(:proof)
         function.proof
 
         expect(WebMock).to have_requested(:post, callback_url)
@@ -167,6 +167,20 @@ RSpec.describe IdentityIdpFunctions::ProofResolutionMock do
 
     context 'when IDP auth token is blank' do
       it_behaves_like 'misconfigured proofer'
+    end
+
+    context 'with a failure response from the state id verifier' do
+      it 'is a failure response' do
+        expect(function.state_id_mock_proofer).to receive(:proof).
+          and_return(Proofer::Result.new(exception: 'some error'))
+
+        resolution_result  = nil
+        function.proof do |response|
+          resolution_result = response[:resolution_result]
+        end
+
+        expect(resolution_result[:success]).to eq(false)
+      end
     end
 
     context 'when there are no params in the ENV' do
