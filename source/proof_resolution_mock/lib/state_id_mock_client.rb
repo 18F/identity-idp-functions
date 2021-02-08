@@ -19,6 +19,8 @@ module IdentityIdpFunctions
       drivers_license drivers_permit state_id_card
     ].to_set.freeze
 
+    INVALID_STATE_ID_NUMBER = '00000000'.freeze
+
     proof do |applicant, result|
       if state_not_supported?(applicant[:state_id_jurisdiction])
         result.add_error(:state_id_jurisdiction, 'The jurisdiction could not be verified')

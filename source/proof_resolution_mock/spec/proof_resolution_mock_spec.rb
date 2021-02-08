@@ -170,10 +170,13 @@ RSpec.describe IdentityIdpFunctions::ProofResolutionMock do
     end
 
     context 'with a failure response from the state id verifier' do
-      it 'is a failure response' do
-        expect(function.state_id_mock_proofer).to receive(:proof).
-          and_return(Proofer::Result.new(exception: 'some error'))
+      let(:applicant_pii) do
+        super().merge(
+          state_id_number: IdentityIdpFunctions::StateIdMockClient::INVALID_STATE_ID_NUMBER,
+        )
+      end
 
+      it 'is a failure response' do
         resolution_result = nil
         function.proof do |response|
           resolution_result = response[:resolution_result]
