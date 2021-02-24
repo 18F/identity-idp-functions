@@ -2,7 +2,7 @@ source 'https://rubygems.org'
 
 ruby '~> 2.7.0'
 
-gem 'aamva', '>= 3.5.0', github: '18F/identity-aamva-api-client-gem', branch: 'margolis-transaction-id'
+gem 'aamva', github: '18F/identity-aamva-api-client-gem', branch: 'margolis-transaction-id'
 gem 'aws-sdk-ssm', '~> 1.55'
 gem 'faraday'
 gem 'lexisnexis', github: '18F/identity-lexisnexis-api-client-gem', tag: 'v2.5.0'
