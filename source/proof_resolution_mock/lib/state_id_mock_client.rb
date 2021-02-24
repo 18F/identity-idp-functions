@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'proofer'
 
 module IdentityIdpFunctions
@@ -19,7 +21,7 @@ module IdentityIdpFunctions
       drivers_license drivers_permit state_id_card
     ].to_set.freeze
 
-    INVALID_STATE_ID_NUMBER = '00000000'.freeze
+    INVALID_STATE_ID_NUMBER = '00000000'
 
     TRANSACTION_ID = 'state-id-mock-transaction-id-456'
 

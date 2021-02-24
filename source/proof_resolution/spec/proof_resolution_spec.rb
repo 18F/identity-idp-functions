@@ -66,7 +66,7 @@ RSpec.describe IdentityIdpFunctions::ProofResolution do
         'Status' => {
           'TransactionStatus' => 'passed',
           'ConversationId' => lexisnexis_transaction_id,
-         },
+        },
       }
     end
 
@@ -88,7 +88,7 @@ RSpec.describe IdentityIdpFunctions::ProofResolution do
                 state_id: Aamva::Proofer.vendor_name,
                 transaction_id: aamva_transaction_id,
               },
-            ]
+            ],
           },
           transaction_id: lexisnexis_transaction_id,
         },
@@ -141,7 +141,7 @@ RSpec.describe IdentityIdpFunctions::ProofResolution do
                   state_id: Aamva::Proofer.vendor_name,
                   transaction_id: aamva_transaction_id,
                 },
-              ]
+              ],
             },
             transaction_id: lexisnexis_transaction_id,
           },
@@ -193,7 +193,7 @@ RSpec.describe IdentityIdpFunctions::ProofResolution do
                   resolution: LexisNexis::InstantVerify::Proofer.vendor_name,
                   transaction_id: nil,
                 },
-              ]
+              ],
             },
             transaction_id: nil,
           },
