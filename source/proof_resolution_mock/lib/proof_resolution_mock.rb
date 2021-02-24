@@ -53,12 +53,18 @@ module IdentityIdpFunctions
       result = proofer_result.to_h
       resolution_success = proofer_result.success?
 
-      result[:context] = { stages: [
-        resolution: IdentityIdpFunctions::ResolutionMockClient.vendor_name,
-      ] }
+      result[:context] = {
+        stages: [
+          {
+            resolution: IdentityIdpFunctions::ResolutionMockClient.vendor_name,
+            transaction_id: proofer_result.transaction_id,
+          },
+        ],
+      }
 
       result[:timed_out] = proofer_result.timed_out?
       result[:exception] = proofer_result.exception.inspect if proofer_result.exception
+      result[:transaction_id] = proofer_result.transaction_id
 
       state_id_success = nil
       if should_proof_state_id? && result[:success]
@@ -90,11 +96,14 @@ module IdentityIdpFunctions
     end
 
     def proof_state_id(result)
-      result[:context][:stages].push(state_id: IdentityIdpFunctions::StateIdMockClient.vendor_name)
-
       proofer_result = with_retries(**faraday_retry_options) do
         state_id_mock_proofer.proof(applicant_pii)
       end
+
+      result[:context][:stages].push(
+        state_id: IdentityIdpFunctions::StateIdMockClient.vendor_name,
+        transaction_id: proofer_result.transaction_id,
+      )
 
       result.merge!(proofer_result.to_h) do |key, orig, current|
         key == :messages ? orig + current : current

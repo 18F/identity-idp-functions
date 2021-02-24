@@ -21,6 +21,8 @@ RSpec.describe IdentityIdpFunctions::ProofResolutionMock do
       state_id_jurisdiction: 'WI',
     }
   end
+  let(:resolution_transaction_id) { IdentityIdpFunctions::ResolutionMockClient::TRANSACTION_ID }
+  let(:state_id_transaction_id) { IdentityIdpFunctions::StateIdMockClient::TRANSACTION_ID }
 
   before do
     stub_const(
@@ -45,10 +47,13 @@ RSpec.describe IdentityIdpFunctions::ProofResolutionMock do
             messages: [],
             success: true,
             timed_out: false,
-            context: { stages: [
-              { resolution: 'ResolutionMock' },
-              { state_id: 'StateIdMock' },
-            ] },
+            context: {
+              stages: [
+                { resolution: 'ResolutionMock', transaction_id: resolution_transaction_id },
+                { state_id: 'StateIdMock', transaction_id: state_id_transaction_id },
+              ],
+            },
+            transaction_id: resolution_transaction_id,
           },
         )
       end
@@ -84,10 +89,13 @@ RSpec.describe IdentityIdpFunctions::ProofResolutionMock do
             messages: [],
             success: true,
             timed_out: false,
-            context: { stages: [
-              { resolution: 'ResolutionMock' },
-              { state_id: 'StateIdMock' },
-            ] },
+            context: {
+              stages: [
+                { resolution: 'ResolutionMock', transaction_id: resolution_transaction_id },
+                { state_id: 'StateIdMock', transaction_id: state_id_transaction_id },
+              ],
+            },
+            transaction_id: resolution_transaction_id,
           },
         )
 
