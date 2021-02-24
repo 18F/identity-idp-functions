@@ -94,7 +94,14 @@ module IdentityIdpFunctions
       result = proofer_result.to_h
       resolution_success = proofer_result.success?
 
-      result[:context] = { stages: [resolution: LexisNexis::InstantVerify::Proofer.vendor_name] }
+      result[:context] = {
+        stages: [
+          {
+            resolution: LexisNexis::InstantVerify::Proofer.vendor_name,
+            transaction_id: proofer_result.transaction_id,
+          },
+        ],
+      }
       result[:transaction_id] = proofer_result.transaction_id
 
       result[:timed_out] = proofer_result.timed_out?
@@ -127,7 +134,14 @@ module IdentityIdpFunctions
       state_id_success = proofer_result.success?
       resolution_success = nil
 
-      result[:context] = { stages: [{ state_id: Aamva::Proofer.vendor_name }] }
+      result[:context] = {
+        stages: [
+          {
+            state_id: Aamva::Proofer.vendor_name,
+            transaction_id: proofer_result.transaction_id,
+          },
+        ],
+      }
 
       if state_id_success
         lexisnexis_result = timer.time('resolution') do
@@ -142,7 +156,10 @@ module IdentityIdpFunctions
           key == :messages ? orig + current : current
         end
 
-        result[:context][:stages].push(resolution: LexisNexis::InstantVerify::Proofer.vendor_name)
+        result[:context][:stages].push(
+          resolution: LexisNexis::InstantVerify::Proofer.vendor_name,
+          transaction_id: lexisnexis_result.transaction_id,
+        )
         result[:transaction_id] = lexisnexis_result.transaction_id
         result[:timed_out] = lexisnexis_result.timed_out?
         result[:exception] = lexisnexis_result.exception.inspect if lexisnexis_result.exception
@@ -156,11 +173,14 @@ module IdentityIdpFunctions
     end
 
     def proof_state_id(result)
-      result[:context][:stages].push(state_id: Aamva::Proofer.vendor_name)
-
       proofer_result = with_retries(**faraday_retry_options) do
         aamva_proofer.proof(applicant_pii)
       end
+
+      result[:context][:stages].push(
+        state_id: Aamva::Proofer.vendor_name,
+        transaction_id: proofer_result.transaction_id,
+      )
 
       result.merge!(proofer_result.to_h) do |key, orig, current|
         key == :messages ? orig + current : current

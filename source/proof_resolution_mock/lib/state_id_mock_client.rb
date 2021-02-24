@@ -21,6 +21,8 @@ module IdentityIdpFunctions
 
     INVALID_STATE_ID_NUMBER = '00000000'.freeze
 
+    TRANSACTION_ID = 'state-id-mock-transaction-id-456'
+
     proof do |applicant, result|
       if state_not_supported?(applicant[:state_id_jurisdiction])
         result.add_error(:state_id_jurisdiction, 'The jurisdiction could not be verified')
@@ -31,6 +33,8 @@ module IdentityIdpFunctions
       elsif invalid_state_id_type?(applicant[:state_id_type])
         result.add_error(:state_id_type, 'The state ID type could not be verified')
       end
+
+      result.transaction_id = TRANSACTION_ID
     end
 
     private

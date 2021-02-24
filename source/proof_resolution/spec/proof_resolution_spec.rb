@@ -5,6 +5,8 @@ RSpec.describe IdentityIdpFunctions::ProofResolution do
   let(:idp_api_auth_token) { SecureRandom.hex }
   let(:callback_url) { 'https://example.login.gov/api/callbacks/proof-resolution/:token' }
   let(:trace_id) { SecureRandom.uuid }
+  let(:lexisnexis_transaction_id) { SecureRandom.uuid }
+  let(:aamva_transaction_id) { SecureRandom.uuid }
   let(:applicant_pii) do
     {
       first_name: 'Johnny',
@@ -60,7 +62,12 @@ RSpec.describe IdentityIdpFunctions::ProofResolution do
     end
 
     let(:lexisnexis_response) do
-      { 'Status' => { 'TransactionStatus' => 'passed' } }
+      {
+        'Status' => {
+          'TransactionStatus' => 'passed',
+          'ConversationId' => lexisnexis_transaction_id,
+         },
+      }
     end
 
     let(:expected_callback_response) do
@@ -71,11 +78,19 @@ RSpec.describe IdentityIdpFunctions::ProofResolution do
           messages: [],
           success: true,
           timed_out: false,
-          context: { stages: [
-            { resolution: LexisNexis::InstantVerify::Proofer.vendor_name },
-            { state_id: Aamva::Proofer.vendor_name },
-          ] },
-          transaction_id: nil,
+          context: {
+            stages: [
+              {
+                resolution: LexisNexis::InstantVerify::Proofer.vendor_name,
+                transaction_id: lexisnexis_transaction_id,
+              },
+              {
+                state_id: Aamva::Proofer.vendor_name,
+                transaction_id: aamva_transaction_id,
+              },
+            ]
+          },
+          transaction_id: lexisnexis_transaction_id,
         },
       }
     end
@@ -92,13 +107,15 @@ RSpec.describe IdentityIdpFunctions::ProofResolution do
     end
 
     it 'runs' do
-      expect_any_instance_of(Aamva::Proofer).to receive(:proof).and_return(Proofer::Result.new)
+      expect_any_instance_of(Aamva::Proofer).to receive(:proof).
+        and_return(Proofer::Result.new(transaction_id: aamva_transaction_id))
       IdentityIdpFunctions::ProofResolution.handle(event: event, context: nil)
     end
 
     context 'when called with a block' do
       it 'gives the results to the block instead of posting to the callback URL' do
-        expect_any_instance_of(Aamva::Proofer).to receive(:proof).and_return(Proofer::Result.new)
+        expect_any_instance_of(Aamva::Proofer).to receive(:proof).
+          and_return(Proofer::Result.new(transaction_id: aamva_transaction_id))
         yielded_result = nil
         IdentityIdpFunctions::ProofResolution.handle(
           event: event,
@@ -114,11 +131,19 @@ RSpec.describe IdentityIdpFunctions::ProofResolution do
             messages: [],
             success: true,
             timed_out: false,
-            context: { stages: [
-              { resolution: LexisNexis::InstantVerify::Proofer.vendor_name },
-              { state_id: Aamva::Proofer.vendor_name },
-            ] },
-            transaction_id: nil,
+            context: {
+              stages: [
+                {
+                  resolution: LexisNexis::InstantVerify::Proofer.vendor_name,
+                  transaction_id: lexisnexis_transaction_id,
+                },
+                {
+                  state_id: Aamva::Proofer.vendor_name,
+                  transaction_id: aamva_transaction_id,
+                },
+              ]
+            },
+            transaction_id: lexisnexis_transaction_id,
           },
         )
 
@@ -128,10 +153,11 @@ RSpec.describe IdentityIdpFunctions::ProofResolution do
 
     context 'dob_year_only, failed response from lexisnexis' do
       let(:dob_year_only) { true }
+      let(:should_proof_state_id) { true }
       let(:lexisnexis_response) do
         {
           'Status' => {
-            'CoversationId' => SecureRandom.hex,
+            'CoversationId' => lexisnexis_transaction_id,
             'Workflow' => 'foobar.baz',
             'TransactionStatus' => 'error',
             'TransactionReasonCode' => {
@@ -157,17 +183,26 @@ RSpec.describe IdentityIdpFunctions::ProofResolution do
             messages: [],
             success: false,
             timed_out: false,
-            context: { stages: [
-              { state_id: Aamva::Proofer.vendor_name },
-              { resolution: LexisNexis::InstantVerify::Proofer.vendor_name },
-            ] },
+            context: {
+              stages: [
+                {
+                  state_id: Aamva::Proofer.vendor_name,
+                  transaction_id: aamva_transaction_id,
+                },
+                {
+                  resolution: LexisNexis::InstantVerify::Proofer.vendor_name,
+                  transaction_id: nil,
+                },
+              ]
+            },
             transaction_id: nil,
           },
         }
       end
 
       it 'has a failed repsonse' do
-        expect_any_instance_of(Aamva::Proofer).to receive(:proof).and_return(Proofer::Result.new)
+        expect_any_instance_of(Aamva::Proofer).to receive(:proof).
+          and_return(Proofer::Result.new(transaction_id: aamva_transaction_id))
         IdentityIdpFunctions::ProofResolution.handle(event: event, context: nil)
       end
     end
@@ -280,11 +315,10 @@ RSpec.describe IdentityIdpFunctions::ProofResolution do
       end
 
       it 'logs the correct context' do
-        transaction_id = SecureRandom.uuid
-
-        expect(aamva_proofer).to receive(:proof).and_return(Proofer::Result.new)
+        expect(aamva_proofer).to receive(:proof).
+          and_return(Proofer::Result.new(transaction_id: aamva_transaction_id))
         expect(lexisnexis_proofer).to receive(:proof).
-          and_return(Proofer::Result.new(transaction_id: transaction_id))
+          and_return(Proofer::Result.new(transaction_id: lexisnexis_transaction_id))
 
         function.proof
 
@@ -292,11 +326,11 @@ RSpec.describe IdentityIdpFunctions::ProofResolution do
           body = JSON.parse(request.body, symbolize_names: true)
 
           expect(body.dig(:resolution_result, :context, :stages)).to eq [
-            { state_id: 'aamva:state_id' },
-            { resolution: 'lexisnexis:instant_verify' },
+            { state_id: 'aamva:state_id', transaction_id: aamva_transaction_id },
+            { resolution: 'lexisnexis:instant_verify', transaction_id: lexisnexis_transaction_id },
           ]
 
-          expect(body.dig(:resolution_result, :transaction_id)).to eq(transaction_id)
+          expect(body.dig(:resolution_result, :transaction_id)).to eq(lexisnexis_transaction_id)
         end)
       end
     end
