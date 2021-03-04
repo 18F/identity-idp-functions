@@ -97,14 +97,20 @@ RSpec.describe IdentityIdpFunctions::ProofDocument do
         ) do |request|
           expect(JSON.parse(request.body, symbolize_names: true)).to eq(
             document_result: {
-              acuant_error: { code: nil, message: nil },
+              alert_failure_count: 0,
               billed: true,
               errors: {},
-              liveness_assessment: 'Live',
-              liveness_score: nil,
-              match_score: nil,
+              face_match_results: { is_match: true, match_score: nil },
+              image_metrics: {},
+              processed_alerts: { failed: [], passed: [] },
               raw_alerts: [],
+              raw_regions: [],
               result: 'Passed',
+              selfie_liveness_results: {
+                acuant_error: { code: nil, message: nil },
+                liveness_assessment: 'Live',
+                liveness_score: nil,
+              },
               success: true,
               exception: nil,
               pii_from_doc: applicant_pii,
@@ -129,15 +135,21 @@ RSpec.describe IdentityIdpFunctions::ProofDocument do
 
         expect(yielded_result).to eq(
           document_result: {
-            acuant_error: { code: nil, message: nil },
+            alert_failure_count: 0,
             billed: true,
             errors: {},
-            liveness_score: nil,
-            match_score: nil,
+            face_match_results: { is_match: true, match_score: nil },
+            image_metrics: {},
+            processed_alerts: { failed: [], passed: [] },
             raw_alerts: [],
+            raw_regions: [],
             result: 'Passed',
+            selfie_liveness_results: {
+              acuant_error: { code: nil, message: nil },
+              liveness_assessment: 'Live',
+              liveness_score: nil,
+            },
             success: true,
-            liveness_assessment: 'Live',
             exception: nil,
             pii_from_doc: applicant_pii,
           },
