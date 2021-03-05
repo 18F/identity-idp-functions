@@ -37,6 +37,7 @@ module IdentityIdpFunctions
 
       result = proofer_result.to_h
       result[:context] = { stages: [address: LexisNexis::PhoneFinder::Proofer.vendor_name] }
+      result[:transaction_id] = proofer_result.transaction_id
 
       result[:timed_out] = proofer_result.timed_out?
       result[:exception] = proofer_result.exception.inspect if proofer_result.exception
