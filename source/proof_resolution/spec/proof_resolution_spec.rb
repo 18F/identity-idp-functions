@@ -35,19 +35,30 @@ RSpec.describe IdentityIdpFunctions::ProofResolution do
       'lexisnexis_password' => 'aaa',
       'lexisnexis_base_url' => 'https://lexisnexis.example.com/',
       'lexisnexis_instant_verify_workflow' => 'aaa',
-      'aamva_public_key' => 'aamvamaa',
-      'aamva_private_key' => 'aamvamaa',
     )
   end
 
   describe '.handle' do
+    def stub_ssm(key_values)
+      Aws.config[:ssm] = {
+        stub_responses: {
+          get_parameter: lambda do |context|
+            # example: '/int/idp/doc-capture/aaa'
+            key = context.params[:name].split('/').last
+
+            { parameter: { value: key_values.fetch(key) } }
+          end,
+        },
+      }
+    end
+
     before do
       stub_request(
         :post,
         'https://lexisnexis.example.com/restws/identity/v2/abc123/aaa/conversation',
       ).to_return(body: lexisnexis_response.to_json)
 
-      stub_request(:post, Aamva::Request::VerificationRequest.verification_url).
+      stub_request(:post, Aamva::Request::VerificationRequest::DEFAULT_VERIFICATION_URL).
         to_return(body: {}.to_json, status: 200)
 
       stub_request(:post, callback_url).
@@ -59,6 +70,12 @@ RSpec.describe IdentityIdpFunctions::ProofResolution do
         ) do |request|
         expect(JSON.parse(request.body, symbolize_names: true)).to match(expected_callback_response)
       end
+
+      stub_ssm(
+        'aamva_public_key' => 'aamvamaa',
+        'aamva_private_key' => 'aamvamaa',
+        'resolution_proof_result_token' => idp_api_auth_token,
+      )
     end
 
     let(:lexisnexis_response) do
@@ -112,10 +129,24 @@ RSpec.describe IdentityIdpFunctions::ProofResolution do
       IdentityIdpFunctions::ProofResolution.handle(event: event, context: nil)
     end
 
+    context 'when called with aamva_configs in the lambda payload' do
+      let(:event) do
+        super().merge(
+          aamva_config: {
+            private_key: 'aaa',
+            public_key: 'bbb'
+          }
+        )
+      end
+
+      it 'errors' do
+        expect { IdentityIdpFunctions::ProofResolution.handle(event: event, context: nil) }.
+          to raise_error(IdentityIdpFunctions::Errors::MisconfiguredLambdaError, /aamva/)
+      end
+    end
+
     context 'when called with a block' do
-      it 'gives the results to the block instead of posting to the callback URL' do
-        expect_any_instance_of(Aamva::Proofer).to receive(:proof).
-          and_return(Proofer::Result.new(transaction_id: aamva_transaction_id))
+      subject(:yielded_result) do
         yielded_result = nil
         IdentityIdpFunctions::ProofResolution.handle(
           event: event,
@@ -123,6 +154,11 @@ RSpec.describe IdentityIdpFunctions::ProofResolution do
         ) do |result|
           yielded_result = result
         end
+      end
+
+      it 'gives the results to the block instead of posting to the callback URL' do
+        expect_any_instance_of(Aamva::Proofer).to receive(:proof).
+          and_return(Proofer::Result.new(transaction_id: aamva_transaction_id))
 
         expect(yielded_result).to eq(
           resolution_result: {
@@ -148,6 +184,26 @@ RSpec.describe IdentityIdpFunctions::ProofResolution do
         )
 
         expect(a_request(:post, callback_url)).to_not have_been_made
+      end
+
+      context 'with aamva configs' do
+        let(:event) do
+          super().merge(
+            aamva_config: {
+              private_key: 'overridden value',
+              public_key: 'overridden value'
+            }
+          )
+        end
+
+        it 'passes aamva params to the aamva gem' do
+          expect(Aamva::Proofer).to receive(:new).with(hash_including(
+            private_key: 'overridden value',
+            public_key: 'overridden value'
+          )).and_call_original
+
+          expect(yielded_result).to be
+        end
       end
     end
 
@@ -359,10 +415,6 @@ RSpec.describe IdentityIdpFunctions::ProofResolution do
           with('lexisnexis_base_url').and_return('aaa')
         expect(function.ssm_helper).to receive(:load).
           with('lexisnexis_instant_verify_workflow').and_return('aaa')
-        expect(function.ssm_helper).to receive(:load).
-          with('aamva_public_key').and_return('aaa')
-        expect(function.ssm_helper).to receive(:load).
-          with('aamva_private_key').and_return('aaa')
 
         expect(lexisnexis_proofer).to receive(:proof).
           and_return(Proofer::Result.new)
@@ -381,8 +433,6 @@ RSpec.describe IdentityIdpFunctions::ProofResolution do
           'lexisnexis_password' => 'aaa',
           'lexisnexis_base_url' => 'aaa',
           'lexisnexis_instant_verify_workflow' => 'aaa',
-          'aamva_public_key' => 'aaa',
-          'aamva_private_key' => 'aaa',
         )
       end
     end
