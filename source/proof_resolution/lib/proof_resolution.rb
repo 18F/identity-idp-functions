@@ -16,28 +16,28 @@ module IdentityIdpFunctions
       new(**params).proof(&callback_block)
     end
 
-    attr_reader :aamva_config,
-                :applicant_pii,
+    attr_reader :applicant_pii,
                 :callback_url,
                 :trace_id,
+                :aamva_config,
                 :timer
 
     # @param [Hash] aamva_config should only be included when run in-process, this config includes
     # secrets that should should not be sent in the lambda payload
     def initialize(
-      aamva_config: {},
       applicant_pii:,
       callback_url:,
       should_proof_state_id:,
       dob_year_only: false,
-      trace_id: nil
+      trace_id: nil,
+      aamva_config: {}
     )
-      @aamva_config = aamva_config
       @applicant_pii = applicant_pii
       @callback_url = callback_url
       @should_proof_state_id = should_proof_state_id
       @dob_year_only = dob_year_only
       @trace_id = trace_id
+      @aamva_config = aamva_config
       @timer = IdentityIdpFunctions::Timer.new
     end
 
@@ -62,13 +62,12 @@ module IdentityIdpFunctions
 
       if !block_given?
         if api_auth_token.to_s.empty?
-          raise Errors::MisconfiguredLambdaError.new('IDP_API_AUTH_TOKEN is not configured')
+          raise Errors::MisconfiguredLambdaError, 'IDP_API_AUTH_TOKEN is not configured'
         end
 
         if !aamva_config.empty?
-          raise Errors::MisconfiguredLambdaError.new(
-            'aamva config should not be present in lambda payload',
-          )
+          raise Errors::MisconfiguredLambdaError,
+                'aamva config should not be present in lambda payload'
         end
       end
 

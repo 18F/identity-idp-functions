@@ -26,7 +26,7 @@ module IdentityIdpFunctions
 
     def proof
       if !block_given? && api_auth_token.to_s.empty?
-        raise Errors::MisconfiguredLambdaError.new('IDP_API_AUTH_TOKEN is not configured')
+        raise Errors::MisconfiguredLambdaError, 'IDP_API_AUTH_TOKEN is not configured'
       end
 
       proofer_result = timer.time('address') do

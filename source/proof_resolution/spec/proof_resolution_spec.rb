@@ -134,8 +134,8 @@ RSpec.describe IdentityIdpFunctions::ProofResolution do
         super().merge(
           aamva_config: {
             private_key: 'aaa',
-            public_key: 'bbb'
-          }
+            public_key: 'bbb',
+          },
         )
       end
 
@@ -191,16 +191,16 @@ RSpec.describe IdentityIdpFunctions::ProofResolution do
           super().merge(
             aamva_config: {
               private_key: 'overridden value',
-              public_key: 'overridden value'
-            }
+              public_key: 'overridden value',
+            },
           )
         end
 
         it 'passes aamva params to the aamva gem' do
           expect(Aamva::Proofer).to receive(:new).with(hash_including(
-            private_key: 'overridden value',
-            public_key: 'overridden value'
-          )).and_call_original
+                                                         private_key: 'overridden value',
+                                                         public_key: 'overridden value',
+                                                       )).and_call_original
 
           expect(yielded_result).to be
         end
