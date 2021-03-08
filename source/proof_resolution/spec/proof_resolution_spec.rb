@@ -29,29 +29,10 @@ RSpec.describe IdentityIdpFunctions::ProofResolution do
     stub_const(
       'ENV',
       'IDP_API_AUTH_TOKEN' => idp_api_auth_token,
-      'lexisnexis_account_id' => 'abc123',
-      'lexisnexis_request_mode' => 'aaa',
-      'lexisnexis_username' => 'aaa',
-      'lexisnexis_password' => 'aaa',
-      'lexisnexis_base_url' => 'https://lexisnexis.example.com/',
-      'lexisnexis_instant_verify_workflow' => 'aaa',
     )
   end
 
   describe '.handle' do
-    def stub_ssm(key_values)
-      Aws.config[:ssm] = {
-        stub_responses: {
-          get_parameter: lambda do |context|
-            # example: '/int/idp/doc-capture/aaa'
-            key = context.params[:name].split('/').last
-
-            { parameter: { value: key_values.fetch(key) } }
-          end,
-        },
-      }
-    end
-
     before do
       stub_request(
         :post,
@@ -75,6 +56,12 @@ RSpec.describe IdentityIdpFunctions::ProofResolution do
         'aamva_public_key' => 'aamvamaa',
         'aamva_private_key' => 'aamvamaa',
         'resolution_proof_result_token' => idp_api_auth_token,
+        'lexisnexis_account_id' => 'abc123',
+        'lexisnexis_request_mode' => 'aaa',
+        'lexisnexis_username' => 'aaa',
+        'lexisnexis_password' => 'aaa',
+        'lexisnexis_base_url' => 'https://lexisnexis.example.com/',
+        'lexisnexis_instant_verify_workflow' => 'aaa',
       )
     end
 
@@ -145,6 +132,22 @@ RSpec.describe IdentityIdpFunctions::ProofResolution do
       end
     end
 
+    context 'when called with lexisnexis_configs in the lambda payload' do
+      let(:event) do
+        super().merge(
+          lexisnexis_config: {
+            username: 'aaa',
+            password: 'bbb',
+          },
+        )
+      end
+
+      it 'errors' do
+        expect { IdentityIdpFunctions::ProofResolution.handle(event: event, context: nil) }.
+          to raise_error(IdentityIdpFunctions::Errors::MisconfiguredLambdaError, /lexisnexis/)
+      end
+    end
+
     context 'when called with a block' do
       subject(:yielded_result) do
         yielded_result = nil
@@ -201,6 +204,29 @@ RSpec.describe IdentityIdpFunctions::ProofResolution do
                                                          private_key: 'overridden value',
                                                          public_key: 'overridden value',
                                                        )).and_call_original
+
+          expect(yielded_result).to be
+        end
+      end
+
+      context 'with lexisnexis configs' do
+        let(:event) do
+          super().merge(
+            lexisnexis_config: {
+              username: 'overridden value',
+              password: 'overridden value',
+            },
+          )
+        end
+
+        it 'passes lexisnexis params to the lexisnexis gem' do
+          expect(LexisNexis::InstantVerify::Proofer).to receive(:new).
+            with(
+              hash_including(
+                username: 'overridden value',
+                password: 'overridden value',
+              ),
+            ).and_call_original
 
           expect(yielded_result).to be
         end
@@ -393,48 +419,6 @@ RSpec.describe IdentityIdpFunctions::ProofResolution do
 
     context 'when IDP auth token is blank' do
       it_behaves_like 'misconfigured proofer'
-    end
-
-    context 'when there are no params in the ENV' do
-      before do
-        ENV.clear
-      end
-
-      it 'loads secrets from SSM and puts them in the ENV' do
-        expect(function.ssm_helper).to receive(:load).
-          with('resolution_proof_result_token').and_return(idp_api_auth_token)
-        expect(function.ssm_helper).to receive(:load).
-          with('lexisnexis_account_id').and_return('aaa')
-        expect(function.ssm_helper).to receive(:load).
-          with('lexisnexis_request_mode').and_return('aaa')
-        expect(function.ssm_helper).to receive(:load).
-          with('lexisnexis_username').and_return('aaa')
-        expect(function.ssm_helper).to receive(:load).
-          with('lexisnexis_password').and_return('aaa')
-        expect(function.ssm_helper).to receive(:load).
-          with('lexisnexis_base_url').and_return('aaa')
-        expect(function.ssm_helper).to receive(:load).
-          with('lexisnexis_instant_verify_workflow').and_return('aaa')
-
-        expect(lexisnexis_proofer).to receive(:proof).
-          and_return(Proofer::Result.new)
-
-        expect(aamva_proofer).to receive(:proof).
-          and_return(Proofer::Result.new)
-
-        function.proof
-
-        expect(WebMock).to have_requested(:post, callback_url)
-
-        expect(ENV).to include(
-          'lexisnexis_account_id' => 'aaa',
-          'lexisnexis_request_mode' => 'aaa',
-          'lexisnexis_username' => 'aaa',
-          'lexisnexis_password' => 'aaa',
-          'lexisnexis_base_url' => 'aaa',
-          'lexisnexis_instant_verify_workflow' => 'aaa',
-        )
-      end
     end
   end
 end

@@ -24,9 +24,11 @@ module IdentityIdpFunctions
       should_proof_state_id:,
       dob_year_only: false,
       trace_id: nil,
-      aamva_config: {} # interface compatibility with ProofResolution
+      aamva_config: {}, # interface compatibility with ProofResolution
+      lexisnexis_config: {} # interface compatibility with ProofResolution
     )
       @applicant_pii = applicant_pii
+      @lexisnexis_config = lexisnexis_config
       @callback_url = callback_url
       @should_proof_state_id = should_proof_state_id
       @dob_year_only = dob_year_only

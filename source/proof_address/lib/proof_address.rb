@@ -15,20 +15,26 @@ module IdentityIdpFunctions
       new(**params).proof(&callback_block)
     end
 
-    attr_reader :applicant_pii, :callback_url, :trace_id, :timer
+    attr_reader :applicant_pii, :callback_url, :trace_id, :lexisnexis_config, :timer
 
-    def initialize(applicant_pii:, callback_url:, trace_id: nil)
+    def initialize(applicant_pii:, callback_url:, trace_id: nil, lexisnexis_config: {})
       @applicant_pii = applicant_pii
       @callback_url = callback_url
+      @lexisnexis_config = lexisnexis_config
       @trace_id = trace_id
       @timer = IdentityIdpFunctions::Timer.new
     end
 
     def proof
-      set_up_env!
+      if !block_given?
+        if api_auth_token.to_s.empty?
+          raise Errors::MisconfiguredLambdaError, 'IDP_API_AUTH_TOKEN is not configured'
+        end
 
-      if !block_given? && api_auth_token.to_s.empty?
-        raise Errors::MisconfiguredLambdaError, 'IDP_API_AUTH_TOKEN is not configured'
+        if !lexisnexis_config.empty?
+          raise Errors::MisconfiguredLambdaError,
+                'lexisnexis config should not be present in lambda payload'
+        end
       end
 
       proofer_result = timer.time('address') do
@@ -82,21 +88,17 @@ module IdentityIdpFunctions
       end
     end
 
-    def set_up_env!
-      %w[
-        lexisnexis_account_id
-        lexisnexis_request_mode
-        lexisnexis_username
-        lexisnexis_password
-        lexisnexis_base_url
-        lexisnexis_phone_finder_workflow
-      ].each do |env_key|
-        ENV[env_key] ||= ssm_helper.load(env_key)
-      end
-    end
-
     def lexisnexis_proofer
-      LexisNexis::PhoneFinder::Proofer.new
+      @lexisnexis_proofer ||= LexisNexis::PhoneFinder::Proofer.new(
+        account_id: lexisnexis_config[:account_id] || ssm_helper.load('lexisnexis_account_id'),
+        request_mode: lexisnexis_config[:request_mode] ||
+          ssm_helper.load('lexisnexis_request_mode'),
+        username: lexisnexis_config[:username] || ssm_helper.load('lexisnexis_username'),
+        password: lexisnexis_config[:password] || ssm_helper.load('lexisnexis_password'),
+        base_url: lexisnexis_config[:base_url] || ssm_helper.load('lexisnexis_base_url'),
+        phone_finder_workflow: lexisnexis_config[:phone_finder_workflow] ||
+          ssm_helper.load('lexisnexis_phone_finder_workflow'),
+      )
     end
 
     def ssm_helper

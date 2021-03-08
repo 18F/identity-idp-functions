@@ -50,6 +50,7 @@ RSpec.describe IdentityIdpFunctions::ProofAddressMock do
       {
         callback_url: callback_url,
         applicant_pii: applicant_pii,
+        lexisnexis_config: {}, # interface compatibiltiy with ProofAddress
       }
     end
 
