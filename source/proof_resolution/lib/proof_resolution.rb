@@ -229,7 +229,8 @@ module IdentityIdpFunctions
     def lexisnexis_proofer
       @lexisnexis_proofer ||= LexisNexis::InstantVerify::Proofer.new(
         account_id: lexisnexis_config[:account_id] || ssm_helper.load('lexisnexis_account_id'),
-        request_mode: lexisnexis_config[:request_mode] || ssm_helper.load('lexisnexis_request_mode'),
+        request_mode: lexisnexis_config[:request_mode] ||
+          ssm_helper.load('lexisnexis_request_mode'),
         username: lexisnexis_config[:username] || ssm_helper.load('lexisnexis_username'),
         password: lexisnexis_config[:password] || ssm_helper.load('lexisnexis_password'),
         base_url: lexisnexis_config[:base_url] || ssm_helper.load('lexisnexis_base_url'),

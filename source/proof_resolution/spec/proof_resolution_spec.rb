@@ -148,7 +148,6 @@ RSpec.describe IdentityIdpFunctions::ProofResolution do
       end
     end
 
-
     context 'when called with a block' do
       subject(:yielded_result) do
         yielded_result = nil
