@@ -30,6 +30,7 @@ Gem::Specification.new do |spec|
 
   # Git dependency
   spec.add_dependency 'aamva', '>= 4.0.0'
+  spec.add_dependency 'lexisnexis', '>= 3.0.0'
 
   spec.add_development_dependency 'rake', '~> 13'
 end

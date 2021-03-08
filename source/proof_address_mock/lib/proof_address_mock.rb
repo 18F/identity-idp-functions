@@ -15,11 +15,12 @@ module IdentityIdpFunctions
       new(**params).proof(&callback_block)
     end
 
-    attr_reader :applicant_pii, :callback_url, :trace_id, :timer
+    attr_reader :applicant_pii, :callback_url, :trace_id, :lexisnexis_config, :timer
 
-    def initialize(applicant_pii:, callback_url:, trace_id: nil)
+    def initialize(applicant_pii:, callback_url:, trace_id: nil, lexisnexis_config: {})
       @applicant_pii = applicant_pii
       @callback_url = callback_url
+      @lexisnexis_config = lexisnexis_config
       @trace_id = trace_id
       @timer = IdentityIdpFunctions::Timer.new
     end

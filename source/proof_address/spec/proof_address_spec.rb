@@ -21,12 +21,6 @@ RSpec.describe IdentityIdpFunctions::ProofAddress do
     stub_const(
       'ENV',
       'IDP_API_AUTH_TOKEN' => idp_api_auth_token,
-      'lexisnexis_account_id' => 'abc123',
-      'lexisnexis_request_mode' => 'aaa',
-      'lexisnexis_username' => 'aaa',
-      'lexisnexis_password' => 'aaa',
-      'lexisnexis_base_url' => 'https://lexisnexis.example.com/',
-      'lexisnexis_phone_finder_workflow' => 'aaa',
     )
   end
 
@@ -42,6 +36,15 @@ RSpec.describe IdentityIdpFunctions::ProofAddress do
             TransactionStatus: 'passed',
           },
         }.to_json,
+      )
+
+      stub_ssm(
+        'lexisnexis_account_id' => 'abc123',
+        'lexisnexis_request_mode' => 'aaa',
+        'lexisnexis_username' => 'aaa',
+        'lexisnexis_password' => 'aaa',
+        'lexisnexis_base_url' => 'https://lexisnexis.example.com/',
+        'lexisnexis_phone_finder_workflow' => 'aaa',
       )
 
       stub_request(:post, callback_url).
@@ -80,7 +83,7 @@ RSpec.describe IdentityIdpFunctions::ProofAddress do
     end
 
     context 'when called with a block' do
-      it 'gives the results to the block instead of posting to the callback URL' do
+      subject(:yielded_result) do
         yielded_result = nil
         IdentityIdpFunctions::ProofAddress.handle(
           event: event,
@@ -88,7 +91,9 @@ RSpec.describe IdentityIdpFunctions::ProofAddress do
         ) do |result|
           yielded_result = result
         end
+      end
 
+      it 'gives the results to the block instead of posting to the callback URL' do
         expect(yielded_result).to eq(
           address_result: {
             exception: nil,
@@ -104,6 +109,29 @@ RSpec.describe IdentityIdpFunctions::ProofAddress do
         )
 
         expect(a_request(:post, callback_url)).to_not have_been_made
+      end
+    end
+
+    context 'with lexisnexis configs' do
+      let(:event) do
+        super().merge(
+          lexisnexis_config: {
+            username: 'overridden value',
+            password: 'overridden value',
+          },
+        )
+      end
+
+      it 'passes lexisnexis params to the lexisnexis gem' do
+        expect(LexisNexis::InstantVerify::Proofer).to receive(:new).
+          with(
+            hash_including(
+              username: 'overridden value',
+              password: 'overridden value',
+            )
+          ).and_call_original
+
+        expect(yielded_result).to be
       end
     end
   end
@@ -177,45 +205,6 @@ RSpec.describe IdentityIdpFunctions::ProofAddress do
 
     context 'when IDP auth token is blank' do
       it_behaves_like 'misconfigured proofer'
-    end
-
-    context 'when there are no params in the ENV' do
-      before do
-        ENV.clear
-
-        expect(lexisnexis_proofer).to receive(:proof).
-          and_return(Proofer::Result.new)
-      end
-
-      it 'loads secrets from SSM and puts them in the ENV' do
-        expect(function.ssm_helper).to receive(:load).
-          with('address_proof_result_token').and_return(idp_api_auth_token)
-        expect(function.ssm_helper).to receive(:load).
-          with('lexisnexis_account_id').and_return('aaa')
-        expect(function.ssm_helper).to receive(:load).
-          with('lexisnexis_request_mode').and_return('aaa')
-        expect(function.ssm_helper).to receive(:load).
-          with('lexisnexis_username').and_return('aaa')
-        expect(function.ssm_helper).to receive(:load).
-          with('lexisnexis_password').and_return('aaa')
-        expect(function.ssm_helper).to receive(:load).
-          with('lexisnexis_base_url').and_return('aaa')
-        expect(function.ssm_helper).to receive(:load).
-          with('lexisnexis_phone_finder_workflow').and_return('aaa')
-
-        function.proof
-
-        expect(WebMock).to have_requested(:post, callback_url)
-
-        expect(ENV).to include(
-          'lexisnexis_account_id' => 'aaa',
-          'lexisnexis_request_mode' => 'aaa',
-          'lexisnexis_username' => 'aaa',
-          'lexisnexis_password' => 'aaa',
-          'lexisnexis_base_url' => 'aaa',
-          'lexisnexis_phone_finder_workflow' => 'aaa',
-        )
-      end
     end
   end
 end

@@ -20,17 +20,21 @@ module IdentityIdpFunctions
                 :callback_url,
                 :trace_id,
                 :aamva_config,
+                :lexisnexis_config,
                 :timer
 
     # @param [Hash] aamva_config should only be included when run in-process, this config includes
     # secrets that should should not be sent in the lambda payload
+    # @param [Hash] lexisnexis_config should only be included when run in-process, this config
+    # includes secrets that should should not be sent in the lambda payload
     def initialize(
       applicant_pii:,
       callback_url:,
       should_proof_state_id:,
       dob_year_only: false,
       trace_id: nil,
-      aamva_config: {}
+      aamva_config: {},
+      lexisnexis_config: {}
     )
       @applicant_pii = applicant_pii
       @callback_url = callback_url
@@ -38,6 +42,7 @@ module IdentityIdpFunctions
       @dob_year_only = dob_year_only
       @trace_id = trace_id
       @aamva_config = aamva_config
+      @lexisnexis_config = lexisnexis_config
       @timer = IdentityIdpFunctions::Timer.new
     end
 
@@ -58,8 +63,6 @@ module IdentityIdpFunctions
 
     # rubocop:disable Metrics/PerceivedComplexity
     def proof
-      set_up_env!
-
       if !block_given?
         if api_auth_token.to_s.empty?
           raise Errors::MisconfiguredLambdaError, 'IDP_API_AUTH_TOKEN is not configured'
@@ -68,6 +71,11 @@ module IdentityIdpFunctions
         if !aamva_config.empty?
           raise Errors::MisconfiguredLambdaError,
                 'aamva config should not be present in lambda payload'
+        end
+
+        if !lexisnexis_config.empty?
+          raise Errors::MisconfiguredLambdaError,
+                'lexisnexis config should not be present in lambda payload'
         end
       end
 
@@ -206,19 +214,6 @@ module IdentityIdpFunctions
       result
     end
 
-    def set_up_env!
-      %w[
-        lexisnexis_account_id
-        lexisnexis_request_mode
-        lexisnexis_username
-        lexisnexis_password
-        lexisnexis_base_url
-        lexisnexis_instant_verify_workflow
-      ].each do |env_key|
-        ENV[env_key] ||= ssm_helper.load(env_key)
-      end
-    end
-
     def post_callback(callback_body:)
       with_retries(**faraday_retry_options) do
         build_faraday.post(
@@ -232,7 +227,15 @@ module IdentityIdpFunctions
     end
 
     def lexisnexis_proofer
-      LexisNexis::InstantVerify::Proofer.new
+      @lexisnexis_proofer ||= LexisNexis::InstantVerify::Proofer.new(
+        account_id: lexisnexis_config[:account_id] || ssm_helper.load('lexisnexis_account_id'),
+        request_mode: lexisnexis_config[:request_mode] || ssm_helper.load('lexisnexis_request_mode'),
+        username: lexisnexis_config[:username] || ssm_helper.load('lexisnexis_username'),
+        password: lexisnexis_config[:password] || ssm_helper.load('lexisnexis_password'),
+        base_url: lexisnexis_config[:base_url] || ssm_helper.load('lexisnexis_base_url'),
+        instant_verify_workflow: lexisnexis_config[:instant_verify_workflow] ||
+          ssm_helper.load('lexisnexis_instant_verify_workflow'),
+      )
     end
 
     def aamva_proofer
