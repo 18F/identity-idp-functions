@@ -15,6 +15,7 @@ module IdentityIdpFunctions
     UNVERIFIABLE_PHONE_NUMBER = '7035555555'
     PROOFER_TIMEOUT_PHONE_NUMBER = '7035555888'
     FAILED_TO_CONTACT_PHONE_NUMBER = '7035555999'
+    TRANSACTION_ID = 'address-mock-transaction-id-123'
 
     proof do |applicant, result|
       plain_phone = applicant[:phone].gsub(/\D/, '').gsub(/\A1/, '')
@@ -25,6 +26,7 @@ module IdentityIdpFunctions
       elsif plain_phone == PROOFER_TIMEOUT_PHONE_NUMBER
         raise Proofer::TimeoutError, 'address mock timeout'
       end
+      result.transaction_id = TRANSACTION_ID
       result.context[:message] = 'some context for the mock address proofer'
     end
   end

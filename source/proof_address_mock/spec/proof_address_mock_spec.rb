@@ -4,6 +4,7 @@ require 'identity-idp-functions/proof_address_mock'
 RSpec.describe IdentityIdpFunctions::ProofAddressMock do
   let(:idp_api_auth_token) { SecureRandom.hex }
   let(:callback_url) { 'https://example.login.gov/api/callbacks/proof-address/:token' }
+  let(:transaction_id) { IdentityIdpFunctions::AddressMockClient::TRANSACTION_ID }
   let(:applicant_pii) do
     {
       first_name: 'Johnny',
@@ -36,6 +37,7 @@ RSpec.describe IdentityIdpFunctions::ProofAddressMock do
             messages: [],
             success: true,
             timed_out: false,
+            transaction_id: transaction_id,
             context: { stages: [
               { address: 'AddressMock' },
             ] },
@@ -72,6 +74,7 @@ RSpec.describe IdentityIdpFunctions::ProofAddressMock do
             messages: [],
             success: true,
             timed_out: false,
+            transaction_id: transaction_id,
             context: { stages: [
               { address: 'AddressMock' },
             ] },
