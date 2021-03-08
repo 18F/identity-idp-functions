@@ -11,6 +11,6 @@ group :test do
   gem 'activesupport'
   gem 'pry-byebug'
   gem 'rspec'
-  gem 'rubocop'
+  gem 'rubocop', '~> 1.11.0'
   gem 'webmock'
 end

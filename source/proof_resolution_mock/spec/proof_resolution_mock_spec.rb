@@ -66,7 +66,7 @@ RSpec.describe IdentityIdpFunctions::ProofResolutionMock do
         applicant_pii: applicant_pii,
         trace_id: trace_id,
         aamva_config: {}, # interface compatibilty with ProofResolution
-        lexisnexis_config: {} # interface compatibilty with ProofResolution
+        lexisnexis_config: {}, # interface compatibilty with ProofResolution
       }
     end
 

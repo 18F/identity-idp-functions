@@ -225,7 +225,7 @@ RSpec.describe IdentityIdpFunctions::ProofResolution do
               hash_including(
                 username: 'overridden value',
                 password: 'overridden value',
-              )
+              ),
             ).and_call_original
 
           expect(yielded_result).to be
