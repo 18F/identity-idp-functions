@@ -65,6 +65,7 @@ RSpec.describe IdentityIdpFunctions::ProofResolutionMock do
         should_proof_state_id: true,
         applicant_pii: applicant_pii,
         trace_id: trace_id,
+        aamva_config: {}, # interface compatibiltiy with ProofResolution
       }
     end
 
