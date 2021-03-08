@@ -137,7 +137,7 @@ RSpec.describe IdentityIdpFunctions::ProofResolution do
         super().merge(
           lexisnexis_config: {
             username: 'aaa',
-            passwprd: 'bbb',
+            password: 'bbb',
           },
         )
       end
