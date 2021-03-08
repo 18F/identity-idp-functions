@@ -5,6 +5,7 @@ RSpec.describe IdentityIdpFunctions::ProofAddress do
   let(:idp_api_auth_token) { SecureRandom.hex }
   let(:callback_url) { 'https://example.login.gov/api/callbacks/proof-address/:token' }
   let(:trace_id) { SecureRandom.uuid }
+  let(:conversation_id) { SecureRandom.hex }
   let(:applicant_pii) do
     {
       first_name: 'Johnny',
@@ -35,7 +36,12 @@ RSpec.describe IdentityIdpFunctions::ProofAddress do
         :post,
         'https://lexisnexis.example.com/restws/identity/v2/abc123/aaa/conversation',
       ).to_return(
-        body: { 'Status' => { 'TransactionStatus' => 'passed' } }.to_json,
+        body: {
+          Status: {
+            ConversationId: conversation_id,
+            TransactionStatus: 'passed',
+          },
+        }.to_json,
       )
 
       stub_request(:post, callback_url).
@@ -52,6 +58,7 @@ RSpec.describe IdentityIdpFunctions::ProofAddress do
               messages: [],
               success: true,
               timed_out: false,
+              transaction_id: conversation_id,
               context: { stages: [
                 { address: 'lexisnexis:phone_finder' },
               ] },
@@ -89,6 +96,7 @@ RSpec.describe IdentityIdpFunctions::ProofAddress do
             messages: [],
             success: true,
             timed_out: false,
+            transaction_id: conversation_id,
             context: { stages: [
               { address: 'lexisnexis:phone_finder' },
             ] },
