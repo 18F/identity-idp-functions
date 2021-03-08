@@ -110,28 +110,28 @@ RSpec.describe IdentityIdpFunctions::ProofAddress do
 
         expect(a_request(:post, callback_url)).to_not have_been_made
       end
-    end
 
-    context 'with lexisnexis configs' do
-      let(:event) do
-        super().merge(
-          lexisnexis_config: {
-            username: 'overridden value',
-            password: 'overridden value',
-          },
-        )
-      end
-
-      it 'passes lexisnexis params to the lexisnexis gem' do
-        expect(LexisNexis::InstantVerify::Proofer).to receive(:new).
-          with(
-            hash_including(
+      context 'with lexisnexis configs' do
+        let(:event) do
+          super().merge(
+            lexisnexis_config: {
               username: 'overridden value',
               password: 'overridden value',
-            )
-          ).and_call_original
+            },
+          )
+        end
 
-        expect(yielded_result).to be
+        it 'passes lexisnexis params to the lexisnexis gem' do
+          expect(LexisNexis::PhoneFinder::Proofer).to receive(:new).
+            with(
+              hash_including(
+                username: 'overridden value',
+                password: 'overridden value',
+              )
+            ).and_call_original
+
+          expect(yielded_result).to be
+        end
       end
     end
   end

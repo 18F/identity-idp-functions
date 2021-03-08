@@ -89,7 +89,7 @@ module IdentityIdpFunctions
     end
 
     def lexisnexis_proofer
-      LexisNexis::PhoneFinder::Proofer.new(
+      @lexisnexis_proofer ||= LexisNexis::PhoneFinder::Proofer.new(
         account_id: lexisnexis_config[:account_id] || ssm_helper.load('lexisnexis_account_id'),
         request_mode: lexisnexis_config[:request_mode] ||
           ssm_helper.load('lexisnexis_request_mode'),
