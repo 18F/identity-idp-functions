@@ -23,13 +23,15 @@ module IdentityIdpFunctions
       callback_url:,
       should_proof_state_id:,
       dob_year_only: false,
-      trace_id: nil
+      trace_id: nil,
+      aamva_config: {} # interface compatibility with ProofResolution
     )
       @applicant_pii = applicant_pii
       @callback_url = callback_url
       @should_proof_state_id = should_proof_state_id
       @dob_year_only = dob_year_only
       @trace_id = trace_id
+      @aamva_config = aamva_config
       @timer = IdentityIdpFunctions::Timer.new
     end
 
@@ -42,7 +44,9 @@ module IdentityIdpFunctions
     end
 
     def proof
-      raise Errors::MisconfiguredLambdaError if !block_given? && api_auth_token.to_s.empty?
+      if !block_given? && api_auth_token.to_s.empty?
+        raise Errors::MisconfiguredLambdaError, 'IDP_API_AUTH_TOKEN is not configured'
+      end
 
       proofer_result = timer.time('resolution') do
         with_retries(**faraday_retry_options) do

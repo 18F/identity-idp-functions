@@ -19,20 +19,25 @@ module IdentityIdpFunctions
     attr_reader :applicant_pii,
                 :callback_url,
                 :trace_id,
+                :aamva_config,
                 :timer
 
+    # @param [Hash] aamva_config should only be included when run in-process, this config includes
+    # secrets that should should not be sent in the lambda payload
     def initialize(
       applicant_pii:,
       callback_url:,
       should_proof_state_id:,
       dob_year_only: false,
-      trace_id: nil
+      trace_id: nil,
+      aamva_config: {}
     )
       @applicant_pii = applicant_pii
       @callback_url = callback_url
       @should_proof_state_id = should_proof_state_id
       @dob_year_only = dob_year_only
       @trace_id = trace_id
+      @aamva_config = aamva_config
       @timer = IdentityIdpFunctions::Timer.new
     end
 
@@ -55,7 +60,16 @@ module IdentityIdpFunctions
     def proof
       set_up_env!
 
-      raise Errors::MisconfiguredLambdaError if !block_given? && api_auth_token.to_s.empty?
+      if !block_given?
+        if api_auth_token.to_s.empty?
+          raise Errors::MisconfiguredLambdaError, 'IDP_API_AUTH_TOKEN is not configured'
+        end
+
+        if !aamva_config.empty?
+          raise Errors::MisconfiguredLambdaError,
+                'aamva config should not be present in lambda payload'
+        end
+      end
 
       callback_log_data = if dob_year_only? && should_proof_state_id?
                             proof_aamva_then_lexisnexis_dob_only
@@ -200,8 +214,6 @@ module IdentityIdpFunctions
         lexisnexis_password
         lexisnexis_base_url
         lexisnexis_instant_verify_workflow
-        aamva_public_key
-        aamva_private_key
       ].each do |env_key|
         ENV[env_key] ||= ssm_helper.load(env_key)
       end
@@ -224,7 +236,15 @@ module IdentityIdpFunctions
     end
 
     def aamva_proofer
-      Aamva::Proofer.new
+      @aamva_proofer ||= Aamva::Proofer.new(
+        auth_request_timeout: aamva_config[:auth_request_timeout],
+        auth_url: aamva_config[:auth_url],
+        cert_enabled: aamva_config[:cert_enabled],
+        private_key: aamva_config[:private_key] || ssm_helper.load('aamva_private_key'),
+        public_key: aamva_config[:public_key] || ssm_helper.load('aamva_public_key'),
+        verification_request_timeout: aamva_config[:verification_request_timeout],
+        verification_url: aamva_config[:verification_url],
+      )
     end
 
     def api_auth_token

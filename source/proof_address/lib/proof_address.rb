@@ -27,7 +27,9 @@ module IdentityIdpFunctions
     def proof
       set_up_env!
 
-      raise Errors::MisconfiguredLambdaError if !block_given? && api_auth_token.to_s.empty?
+      if !block_given? && api_auth_token.to_s.empty?
+        raise Errors::MisconfiguredLambdaError, 'IDP_API_AUTH_TOKEN is not configured'
+      end
 
       proofer_result = timer.time('address') do
         with_retries(**faraday_retry_options) do

@@ -29,7 +29,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'retries', '>= 0.0.5'
 
   # Git dependency
-  spec.add_dependency 'aamva', '>= 3.5.0'
+  spec.add_dependency 'aamva', '>= 4.0.0'
 
   spec.add_development_dependency 'rake', '~> 13'
 end
