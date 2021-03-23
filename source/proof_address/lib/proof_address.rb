@@ -98,6 +98,7 @@ module IdentityIdpFunctions
         base_url: lexisnexis_config[:base_url] || ssm_helper.load('lexisnexis_base_url'),
         phone_finder_workflow: lexisnexis_config[:phone_finder_workflow] ||
           ssm_helper.load('lexisnexis_phone_finder_workflow'),
+        request_timeout: lexisnexis_config[:request_timeout],
       )
     end
 
