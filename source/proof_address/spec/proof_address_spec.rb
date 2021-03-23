@@ -117,6 +117,7 @@ RSpec.describe IdentityIdpFunctions::ProofAddress do
             lexisnexis_config: {
               username: 'overridden value',
               password: 'overridden value',
+              request_timeout: '50',
             },
           )
         end
@@ -127,6 +128,7 @@ RSpec.describe IdentityIdpFunctions::ProofAddress do
               hash_including(
                 username: 'overridden value',
                 password: 'overridden value',
+                request_timeout: '50',
               ),
             ).and_call_original
 
