@@ -14,12 +14,12 @@ RSpec.describe IdentityIdpFunctions::RiscNotification do
 
     it 'posts to the push_notification_url with the right headers' do
       req = stub_request(:post, push_notification_url).with(
-              headers: {
-                'Accept' => 'application/json',
-                'Content-Type' => 'application/secevent+jwt',
-              },
-              body: jwt
-            )
+        headers: {
+          'Accept' => 'application/json',
+          'Content-Type' => 'application/secevent+jwt',
+        },
+        body: jwt,
+      )
 
       IdentityIdpFunctions::RiscNotification.handle(event: event, context: nil)
 
@@ -39,12 +39,12 @@ RSpec.describe IdentityIdpFunctions::RiscNotification do
       stub_request(:post, push_notification_url).to_return(status: 201)
 
       expect(function).to receive(:log_event).with(hash_including(
-        name: 'RiscNotification',
-        response_code: 201,
-        timing: {
-          'deliver_notification' => kind_of(Float),
-        }
-      ))
+                                                     name: 'RiscNotification',
+                                                     response_code: 201,
+                                                     timing: {
+                                                       'deliver_notification' => kind_of(Float),
+                                                     },
+                                                   ))
 
       function.notify
     end
@@ -62,7 +62,7 @@ RSpec.describe IdentityIdpFunctions::RiscNotification do
 
       it 'still logs timing info' do
         expect(function).to receive(:log_event).with(
-          hash_including(name: 'RiscNotification')
+          hash_including(name: 'RiscNotification'),
         )
 
         expect { function.notify }.to raise_error(Faraday::ConnectionFailed)
@@ -82,7 +82,7 @@ RSpec.describe IdentityIdpFunctions::RiscNotification do
 
       it 'still logs timing info' do
         expect(function).to receive(:log_event).with(
-          hash_including(name: 'RiscNotification')
+          hash_including(name: 'RiscNotification'),
         )
 
         expect { function.notify }.to raise_error(Faraday::BadRequestError)
@@ -90,4 +90,3 @@ RSpec.describe IdentityIdpFunctions::RiscNotification do
     end
   end
 end
-

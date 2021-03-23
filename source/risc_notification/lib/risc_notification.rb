@@ -6,7 +6,7 @@ module IdentityIdpFunctions
     include IdentityIdpFunctions::FaradayHelper
     include IdentityIdpFunctions::LoggingHelper
 
-    def self.handle(event:, context:)
+    def self.handle(event:, context:) # rubocop:disable Lint/UnusedMethodArgument
       params = JSON.parse(event.to_json, symbolize_names: true)
       new(**params).notify
     end
