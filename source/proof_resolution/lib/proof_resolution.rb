@@ -236,6 +236,7 @@ module IdentityIdpFunctions
         base_url: lexisnexis_config[:base_url] || ssm_helper.load('lexisnexis_base_url'),
         instant_verify_workflow: lexisnexis_config[:instant_verify_workflow] ||
           ssm_helper.load('lexisnexis_instant_verify_workflow'),
+        request_timeout: lexisnexis_config[:request_timeout],
       )
     end
 
